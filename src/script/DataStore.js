@@ -7,10 +7,6 @@ class DataStore extends EventEmitter {
 		super();
 		// initial value
 		this.data = {
-			radar_k: 18,
-			watch_position: false,
-			current_position: null,
-			high_accuracy: false,
 		};
 	}
 
@@ -21,41 +17,26 @@ class DataStore extends EventEmitter {
 	handleActions(action){
 		//console.log("DataStore recived an action", action);
 		switch(action.type){
-			case "radar-k": {
-				if ( action.value < 1 ) action.value = 1;
-				if ( action.value > 20 ) action.value = 20;
-				if ( action.value !== this.data.radar_k ){
-					this.data.radar_k = action.value;
-					this.emit("onRadarKChanged", this.data.radar_k);
-				}
-				break;
+			case "update":{
+				this.data.polylines = action.value
+				this.emit("onPolylinesUpdated", action.value)
+				break
+			}	
+			case "import":{
+				this.emit("onImportRequested", null)
+				break
 			}
-			case "watch_position": {
-				var bool = !!action.value;
-				if ( this.data.watch_position !== bool ){
-					this.data.watch_position = bool;
-					this.emit("onWatchPositionChanged", bool);
-				}
-				break;
+			case "export":{
+				this.emit("onExportRequested", action.value)
+				break
 			}
-			case "current_position": {
-				if ( this.data.current_position !== action.value ){
-					this.data.current_position = action.value;
-					this.emit("onCurrentPositionChanged", action.value);
-				}
-				break;
+			case "polyline":{
+				this.emit("onImport", action.value)
+				break
 			}
-			case "high_accuracy": {
-				bool = !!action.value;
-				if ( this.data.high_accuracy !== bool ){
-					this.data.high_accuracy = bool;
-					this.emit("onPositionAccuracyChanged", bool);
-				}
-				break;
-			}
-			case "show_station": {
-				this.emit("onShowStationItemRequested", action.value);
-				break;
+			case "focus":{
+				this.emit("onFocus", action.value)
+				break
 			}
 			default: {
 				console.log("unknown action type.", action.type);

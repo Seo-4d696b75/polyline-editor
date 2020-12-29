@@ -1,23 +1,28 @@
 import {GoogleApiWrapper, Map, Marker, Polygon, Polyline, Circle} from "google-maps-react";
 import React from "react";
 import "./Map.css";
-import StationService from "../script/StationService";
+import Data from "../script/DataStore";
+import * as Utils from "../script/utils"
 
 export class MapContainer extends React.Component {
 
 	constructor(){
 		super();
 		this.state = {
+			polylines: []
 		};
+		this.map_ref = React.createRef();
 	}
 
 	componentDidMount(){
-		
+		Data.on("onPolylinesUpdated", this.onUpdate.bind(this))
+		//Data.on("onFocus", this.focusAt.bind(this))
 	}
 
 	componentWillUnmount(){
-		StationService.release();
 		this.map = null;
+		Data.removeAllListeners("onPolylinesUpdated")
+		//Data.removeAllListeners("onFocus")
 	}
 
 	onMapReady(props,map){
@@ -62,6 +67,25 @@ export class MapContainer extends React.Component {
 	onMapDragStart(props,map){
 	}
 
+	focusAt(bounds){
+	}
+
+	onUpdate(data){
+		const list = data.lines
+		const bounds = data.bounds
+		console.log("onUpdate", list)
+		this.setState(Object.assign({}, this.state, {
+			polylines: list
+		}))
+		
+		if ( this.map && bounds ){
+			var rect = this.map_ref.current.getBoundingClientRect()
+			var [center, zoom] = Utils.getZoomProp(bounds, rect.width, rect.height)
+			this.map.panTo(center)
+			this.map.setZoom(zoom)
+			console.log("focus", center, zoom)
+		}
+	}
 
 	render(){
 		return(
@@ -69,6 +93,7 @@ export class MapContainer extends React.Component {
 				<div className='Map-relative' ref={this.map_ref}>
 
 						<Map className='Map' 
+							ref={this.map_ref}
 							google={this.props.google}
 							zoom={14}
 							initialCenter={{ lat: 35.681236, lng: 139.767125 }}
@@ -86,6 +111,16 @@ export class MapContainer extends React.Component {
 							mapTypeControl={true}
 
 						>
+							{this.state.polylines.filter( line => line.visible).map( (line,index) => (
+								<Polyline
+									key={index}
+									path={line.points}
+									strokeColor={line.color}
+									strokeWeight={2}
+									strokeOpacity={0.8}
+									fillOpacity={0.0}
+									clickable={false} />
+							))}
 						</Map>
 						
 				</div>

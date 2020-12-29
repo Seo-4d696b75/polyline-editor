@@ -1,36 +1,40 @@
 import dispatcher from "./Dispatcher";
 
-export function setRadarK(value){
+export function updatePolylines(list, bounds){
+	console.log(list)
 	dispatcher.dispatch({
-		type: "radar-k",
-		value: value,
-	});
+		type: "update",
+		value: {
+			lines: list,
+			bounds: bounds,
+		}
+	})
 }
 
-export function setWatchCurrentPosition(value){
+export function requestImport(){
 	dispatcher.dispatch({
-		type: "watch_position",
-		value: value,
-	});
+		type: "import",
+		value: null,
+	})
 }
 
-export function setCurrentPosition(pos){
+export function requestExport(polyline){
 	dispatcher.dispatch({
-		type: "current_position",
-		value: pos,
-	});
+		type: "export",
+		value: polyline,
+	})
 }
 
-export function setPositionAccuracy(high){
+export function importPolyline(lines){
 	dispatcher.dispatch({
-		type: "high_accuracy",
-		value: high,
-	});
+		type: "polyline",
+		value:lines,
+	})
 }
 
-export function requestShowStationItem(item){
+export function focusAtMap(bounds){
 	dispatcher.dispatch({
-		type: "show_station",
-		value: item,
-	});
+		type: "focus",
+		value: bounds,
+	})
 }

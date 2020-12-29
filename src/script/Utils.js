@@ -1,5 +1,44 @@
 
-export function get_zoom_property(bounds, width, height, min_zoom = 0, anchor = undefined, margin = 50) {
+export function getBounds(points) {
+  var north = -90;
+  var south = 90;
+  var east = -180;
+  var west = 180;
+  for (var p of points) {
+    north = Math.max(north, p.lat);
+    south = Math.min(south, p.lat);
+    east = Math.max(east, p.lng);
+    west = Math.min(west, p.lng);
+  }
+  return {
+    north: north,
+    south: south,
+    east: east,
+    west: west,
+  };
+}
+
+export function sumBounds(bounds){
+  
+  var north = -90;
+  var south = 90;
+  var east = -180;
+  var west = 180;
+  for (var b of bounds) {
+    north = Math.max(north, b.north);
+    south = Math.min(south, b.south);
+    east = Math.max(east, b.east);
+    west = Math.min(west, b.west);
+  }
+  return {
+    north: north,
+    south: south,
+    east: east,
+    west: west,
+  };
+}
+
+export function getZoomProp(bounds, width, height, min_zoom = 0, anchor = undefined, margin = 50) {
   var center = {
     lat: (bounds.south + bounds.north) / 2,
     lng: (bounds.east + bounds.west) / 2
@@ -23,59 +62,3 @@ export function get_zoom_property(bounds, width, height, min_zoom = 0, anchor = 
   }
   return [center, zoom];
 }
-
-/**
- * 
- * @param {[{lat:Number, lng:Number}]} list 
- */
-export function get_bounds(list) {
-  var points = list.map(s => {
-    if (s.lat && s.lng) {
-      return s;
-    } else {
-      return s.position;
-    }
-  });
-  var north = -90;
-  var south = 90;
-  var east = -180;
-  var west = 180;
-  for (var p of points) {
-    north = Math.max(north, p.lat);
-    south = Math.min(south, p.lat);
-    east = Math.max(east, p.lng);
-    west = Math.min(west, p.lng);
-  }
-  return {
-    points: points,
-    north: north,
-    south: south,
-    east: east,
-    west: west,
-  };
-}
-
-export function parse_polyline(data){
-  var start = data['start'];
-  var end = data['end'];
-  const scale = 100000.0;
-  var lng = Math.round(data['lng'] * scale);
-  var lat = Math.round(data['lat'] * scale);
-  var deltaX = data['delta_lng'];
-  var deltaY = data['delta_lat'];
-  var points = deltaX.map((dx, i) => {
-    var dy = deltaY[i];
-    lng += dx;
-    lat += dy;
-    return {
-      lat: lat / scale,
-      lng: lng / scale,
-    };
-  });
-  return {
-    start: start,
-    end: end,
-    points: points,
-  };
-}
-

@@ -1,0 +1,132 @@
+p {
+  color: grey;
+}
+
+.editor-relative{
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.polyline-scroll {
+  padding: 10px;
+  overflow-y: scroll;
+  width: 100%;
+  height: 320px;
+  -ms-overflow-style: none;
+  /* IE, Edge 対応 */
+  scrollbar-width: none;
+  /* Firefox 対応 */
+}
+
+.polyline-frame {
+  width: 300px;
+	background-color: rgba(255,255,255,0.9);
+	border-radius: 4px 4px 4px 4px;
+	box-shadow: 2px 2px 4px grey;
+}
+
+.toggle-visible {
+  background-color: white;
+  width: 20px;
+  height: 20px;
+  margin: 5px;
+}
+
+
+.polyline-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  border-radius: 2px 2px 2px 2px;
+}
+
+.polyline-name{
+  width: 190px;
+}
+
+.polyline-setting{
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.action-button.setting{
+  
+  width: 30px;
+  height: 30px;
+  filter: brightness(80%)
+}
+
+.action-button.setting:hover{  
+  filter: brightness(60%) drop-shadow(2px 2px 2px grey);
+}
+
+
+.action-button{
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+}
+
+.action-button:hover {
+	filter: drop-shadow(2px 2px 2px grey);
+}
+
+
+.polyline-setting-container{
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 240px;
+	height: 220px;
+	padding: 10px;
+	pointer-events: none;
+	z-index: 10;
+  transform: scale(0,0);
+  transform-origin: top right;
+}
+
+.polyline-setting-container.enter-active{
+  transition: all 200ms ease-in;
+  transform: scale(1,1);
+}
+
+.polyline-setting-container.enter-done{
+  transform: scale(1,1);
+}
+
+.polyline-setting-container.exit{
+  transform: scale(1,1);
+}
+
+.polyline-setting-container.exit-active{
+  transition: all 200ms ease-out;
+  transform: scale(0,0);
+}
+
+
+.polyline-setting-container.exit-done{
+  transform: scale(0,0);
+}
+
+.polyline-setting-frame{
+	position: relative;
+	width: 100%;
+	height: 100%;
+	color:grey;
+	padding: 5px;
+	padding-top: 20px;
+	background-color: rgba(255,255,255,0.9);
+	border-radius: 4px 4px 4px 4px;
+	box-shadow: 2px 2px 4px grey;
+	pointer-events: all;
+	text-align: center;
+
+}
+
+.editor-footer{
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+}
