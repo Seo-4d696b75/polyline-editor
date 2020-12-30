@@ -140,6 +140,7 @@ export default class Dialog extends React.Component {
                 as="textarea"
                 rows="20"
                 size="sm"
+                readOnly
                 value={this.state.text} />
             </Form.Group>
 
@@ -247,7 +248,7 @@ export default class Dialog extends React.Component {
             <Button
               variant="secondary"
               onClick={this.closeModal.bind(this)}>
-              Cancel
+              Close
               </Button>
             {this.state.type === "Import" ? (
               <Button

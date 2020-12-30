@@ -1,16 +1,5 @@
 import dispatcher from "./Dispatcher";
 
-export function updatePolylines(list, bounds){
-	console.log(list)
-	dispatcher.dispatch({
-		type: "update",
-		value: {
-			lines: list,
-			bounds: bounds,
-		}
-	})
-}
-
 export function requestImport(){
 	dispatcher.dispatch({
 		type: "import",
@@ -32,7 +21,7 @@ export function importPolyline(lines){
 	})
 }
 
-export function focusAtMap(bounds){
+export function focusAt(bounds){
 	dispatcher.dispatch({
 		type: "focus",
 		value: bounds,

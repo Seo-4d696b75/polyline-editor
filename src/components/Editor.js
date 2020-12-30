@@ -1,14 +1,14 @@
 import React from 'react';
 import './Editor.css';
+import Map from "./Map"
 import img_setting from "../img/ic_settings.png";
 import img_delete from "../img/ic_delete.png";
 import img_export from "../img/ic_upload.png";
 import { CSSTransition } from "react-transition-group";
 import * as Action from "../script/Actions";
-import { Button, DropdownButton, ButtonGroup, Dropdown, Col, Row } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import Data from "../script/DataStore";
 import { parseHSV } from "../script/color";
-import * as utils from "../script/utils"
 
 export default class Editor extends React.Component {
 
@@ -17,7 +17,8 @@ export default class Editor extends React.Component {
     this.hue = 0.0
     this.cnt = 0
     this.state = {
-      polylines: []
+      polylines: [],
+      edit_line: null,
     }
   }
 
@@ -30,33 +31,48 @@ export default class Editor extends React.Component {
   }
 
   onPolylineVisibleChanged(line, event) {
-    line.visible = event.currentTarget.checked
-    this.updatePolylines()
+    var value = event.currentTarget.checked
+    line.visible = value
+    if ( !value && this.state.edit_line && this.state.edit_line.key === line.key ){
+      this.state.edit_line = null
+    }
+    this.updatePolylines(this.state.polylines)
   }
 
   onPolylineSetting(line, event) {
     line.setting = true
-    this.updatePolylines()
+    this.updatePolylines(this.state.polylines)
   }
 
-  updatePolylines(bounds = null) {
-    this.setState(Object.assign({}, this.state))
-    Action.updatePolylines(this.state.polylines, bounds)
+  updatePolylines(list) {
+    if (!list){
+      list = this.state.polylines
+    }
+    this.setState(Object.assign({}, this.state, {
+      polylines: list
+    }))
+  }
+
+  setEditLine(line){
+    line.visible = true
+    this.setState(Object.assign({}, this.state, {
+      edit_line: line,
+    }))
   }
 
   closeSetting(line, event) {
     line.setting = false
-    this.updatePolylines()
+    this.updatePolylines(this.state.polylines)
   }
 
   deletePolyline(key, event) {
-    this.state.polylines = this.state.polylines.filter(line => line.key !== key)
-    this.updatePolylines()
+    var list = this.state.polylines.filter(line => line.key !== key)
+    this.updatePolylines(list)
   }
 
   setPolylineStyle(line, stroke) {
     line.stroke = stroke
-    this.updatePolylines()
+    this.updatePolylines(this.state.polylines)
   }
 
   onImport(lines) {
@@ -68,6 +84,7 @@ export default class Editor extends React.Component {
       this.cnt += 1
       this.state.polylines.push({
         key: this.cnt,
+        version: 0,
         color: color,
         stroke: true,
         visible: true,
@@ -76,17 +93,12 @@ export default class Editor extends React.Component {
         points: line,
       })
     })
-    var bounds = utils.sumBounds(
-      lines.map(line => utils.getBounds(line))
-    )
-    setTimeout(() => {
-      this.updatePolylines(bounds)
-    }, 10)
-
+    this.updatePolylines(this.state.polylines)
   }
 
   render() {
     return (
+      <div>
       <div className="editor-container">
         <div className="editor-relative">
           <p className="panel-title">ポリライン一覧</p>
@@ -99,7 +111,7 @@ export default class Editor extends React.Component {
                   <tbody>
                     {this.state.polylines.map((polyline) => (
                       <tr key={polyline.key}
-                        className="polyline-frame">
+                        className={`polyline-frame${(this.state.edit_line && this.state.edit_line.key === polyline.key) ? " edit" : ""}`}>
                         <td>
                           <input
                             className="toggle-visible"
@@ -109,8 +121,16 @@ export default class Editor extends React.Component {
                             onChange={this.onPolylineVisibleChanged.bind(this, polyline)}
                           />
                         </td>
-                        <td><div className="polyline-color" style={{ backgroundColor: polyline.color }}></div></td>
-                        <td><div className="polyline-name">{polyline.name}</div></td>
+                        <td>
+                          <div className="polyline-color" 
+                          style={{ backgroundColor: polyline.color }}></div>
+                        </td>
+                        <td>
+                          <div className="polyline-name"
+                            onClick={this.setEditLine.bind(this, polyline)}>
+                            {polyline.name}
+                          </div>
+                        </td>
                         <td>
                           <img className="action-button export"
                             src={img_export}
@@ -149,7 +169,7 @@ export default class Editor extends React.Component {
                                       <input type="radio"
                                         value="stroke"
                                         checked={polyline.stroke}
-                                        onClick={this.setPolylineStyle.bind(this, polyline, true)} />
+                                        onChange={this.setPolylineStyle.bind(this, polyline, true)} />
                                         線でつなぐ
                                     </label>
                                     <div className="style-preview" style={{
@@ -164,7 +184,7 @@ export default class Editor extends React.Component {
                                       <input type="radio"
                                         value="marker"
                                         checked={!polyline.stroke}
-                                        onClick={this.setPolylineStyle.bind(this, polyline, false)} />
+                                        onChange={this.setPolylineStyle.bind(this, polyline, false)} />
                                         マーカーのみ
                                     </label>
                                     <div className="style-preview">
@@ -196,6 +216,11 @@ export default class Editor extends React.Component {
               onClick={() => { Action.requestImport() }}>追加</Button>
           </div>
         </div>
+      </div>
+      <Map
+        polylines={this.state.polylines}
+        edit={this.state.edit_line}
+        onUpdate={this.updatePolylines.bind(this)}/>
       </div>
     )
   }

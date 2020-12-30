@@ -33,7 +33,11 @@ p {
   width: 300px;
 	background-color: rgba(255,255,255,0.9);
 	border-radius: 4px 4px 4px 4px;
-	box-shadow: 2px 2px 4px grey;
+  box-shadow: 2px 2px 4px grey;
+}
+
+.polyline-frame.edit{
+  background-color: #EEEEEF
 }
 
 .toggle-visible {
@@ -53,6 +57,7 @@ p {
 
 .polyline-name{
   width: 130px;
+  cursor: pointer;
 }
 
 .polyline-setting{

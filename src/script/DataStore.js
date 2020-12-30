@@ -17,11 +17,6 @@ class DataStore extends EventEmitter {
 	handleActions(action){
 		//console.log("DataStore recived an action", action);
 		switch(action.type){
-			case "update":{
-				this.data.polylines = action.value
-				this.emit("onPolylinesUpdated", action.value)
-				break
-			}	
 			case "import":{
 				this.emit("onImportRequested", null)
 				break

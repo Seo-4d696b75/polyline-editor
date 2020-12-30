@@ -1,3 +1,5 @@
+import * as Edge from "../diagram/Edge"
+import * as Point from "../diagram/Point"
 
 export function getBounds(points) {
   var north = -90;
@@ -61,4 +63,29 @@ export function getZoomProp(bounds, width, height, min_zoom = 0, anchor = undefi
     }
   }
   return [center, zoom];
+}
+
+export function findClosedIndex(point, points){
+  const measure = (a, b) => {
+    return Math.pow(a.lat - b.lat, 2) + Math.pow(a.lng - b.lng, 2)
+  }
+  var index = -1
+  var min = null
+  points.forEach( (p, i) => {
+    var d = measure(point, p)
+    if ( !min || d < min ){
+      min = d
+      index = i
+    }
+  })
+  return index
+}
+
+export function findClosedDist(e1, e2, p){
+  var e = Edge.init(
+    Point.init(e1.lng, e1.lat),
+    Point.init(e2.lng, e2.lat)
+  )
+  p = Point.init(p.lng, p.lat)
+  return Edge.getDistance(e, p)
 }
