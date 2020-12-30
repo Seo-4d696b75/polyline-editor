@@ -87,11 +87,26 @@ p {
 	filter: drop-shadow(2px 2px 2px grey);
 }
 
+.action-button.close{
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.setting-row{
+  width: 100%;
+  display: flex;
+  padding-left: 10px;
+}
+
+.style-preview{
+  margin-left: 20px;
+}
 
 .polyline-setting-container{
 	position: absolute;
-	top: 0px;
-	right: 0px;
+	top: -12px;
+	right: -12px;
 	width: 240px;
 	height: 220px;
 	padding: 10px;

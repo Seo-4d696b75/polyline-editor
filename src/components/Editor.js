@@ -5,7 +5,7 @@ import img_delete from "../img/ic_delete.png";
 import img_export from "../img/ic_upload.png";
 import { CSSTransition } from "react-transition-group";
 import * as Action from "../script/Actions";
-import { Button } from "react-bootstrap";
+import { Button, DropdownButton, ButtonGroup, Dropdown, Col, Row } from "react-bootstrap";
 import Data from "../script/DataStore";
 import { parseHSV } from "../script/color";
 import * as utils from "../script/utils"
@@ -39,7 +39,7 @@ export default class Editor extends React.Component {
     this.updatePolylines()
   }
 
-  updatePolylines(bounds=null) {
+  updatePolylines(bounds = null) {
     this.setState(Object.assign({}, this.state))
     Action.updatePolylines(this.state.polylines, bounds)
   }
@@ -49,8 +49,13 @@ export default class Editor extends React.Component {
     this.updatePolylines()
   }
 
-  deletePolyline(key, event){
-    this.state.polylines = this.state.polylines.filter( line => line.key !== key)
+  deletePolyline(key, event) {
+    this.state.polylines = this.state.polylines.filter(line => line.key !== key)
+    this.updatePolylines()
+  }
+
+  setPolylineStyle(line, stroke) {
+    line.stroke = stroke
     this.updatePolylines()
   }
 
@@ -64,6 +69,7 @@ export default class Editor extends React.Component {
       this.state.polylines.push({
         key: this.cnt,
         color: color,
+        stroke: true,
         visible: true,
         name: `polyline-${this.cnt}`,
         setting: false,
@@ -137,7 +143,38 @@ export default class Editor extends React.Component {
                                     alt="close dialog"
                                     className="action-button close"
                                     onClick={this.closeSetting.bind(this, polyline)} />
-                                  <p>Display Setting</p>
+                                  <p>表示設定</p>
+                                  <div className="setting-row">
+                                    <label>
+                                      <input type="radio"
+                                        value="stroke"
+                                        checked={polyline.stroke}
+                                        onClick={this.setPolylineStyle.bind(this, polyline, true)} />
+                                        線でつなぐ
+                                    </label>
+                                    <div className="style-preview" style={{
+                                      backgroundColor: polyline.color,
+                                      width: "50px",
+                                      height: "6px",
+                                      margin: "auto",
+                                    }} />
+                                  </div>
+                                  <div className="setting-row">
+                                    <label>
+                                      <input type="radio"
+                                        value="marker"
+                                        checked={!polyline.stroke}
+                                        onClick={this.setPolylineStyle.bind(this, polyline, false)} />
+                                        マーカーのみ
+                                    </label>
+                                    <div className="style-preview">
+                                      <img
+                                        alt="preview"
+                                        src={`https://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|${polyline.color.slice(1)}`} />
+                                    </div>
+
+                                  </div>
+
                                 </div>
 
                               </div>

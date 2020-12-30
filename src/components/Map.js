@@ -111,8 +111,10 @@ export class MapContainer extends React.Component {
 							mapTypeControl={true}
 
 						>
-							{this.state.polylines.filter( line => line.visible).map( (line,index) => (
+							{this.state.polylines.filter( line => line.visible && line.stroke )
+								.map( (line) => (
 								<Polyline
+									visible={line.visible}
 									key={line.key}
 									path={line.points}
 									strokeColor={line.color}
@@ -121,6 +123,17 @@ export class MapContainer extends React.Component {
 									fillOpacity={0.0}
 									clickable={false} />
 							))}
+							{this.state.polylines.filter( line => line.visible && !line.stroke)
+								.map( line => {
+									var icon = `https://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|${line.color.slice(1)}`
+									return line.points.map( (point, i) => (
+										<Marker
+											visible={line.visible}
+											key={`${line.key}-${i}`}
+											position={point}
+											icon={icon}/>
+									))
+								}).flat()}
 						</Map>
 						
 				</div>
