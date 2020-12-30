@@ -8,16 +8,26 @@ p {
   height: 100%;
 }
 
+.panel-title{
+  padding: 4px;
+}
+
+.import-hint{
+  margin: 10px;
+  color: #D0D0D0;
+}
+
 .polyline-scroll {
   padding: 10px;
   overflow-y: scroll;
   width: 100%;
-  height: 320px;
+  height: calc(100% - 120px);
   -ms-overflow-style: none;
   /* IE, Edge 対応 */
   scrollbar-width: none;
   /* Firefox 対応 */
 }
+
 
 .polyline-frame {
   width: 300px;
@@ -42,7 +52,7 @@ p {
 }
 
 .polyline-name{
-  width: 190px;
+  width: 130px;
 }
 
 .polyline-setting{
@@ -55,7 +65,11 @@ p {
   
   width: 30px;
   height: 30px;
-  filter: brightness(80%)
+  filter: brightness(60%)
+}
+
+.action-button.export{
+  padding: 2px;
 }
 
 .action-button.setting:hover{  
