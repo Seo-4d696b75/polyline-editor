@@ -15,6 +15,7 @@ export default class Editor extends React.Component {
   constructor() {
     super();
     this.hue = 0.0
+    this.cnt = 0
     this.state = {
       polylines: []
     }
@@ -48,22 +49,23 @@ export default class Editor extends React.Component {
     this.updatePolylines()
   }
 
-  deletePolyline(index, event){
-    this.state.polylines = this.state.polylines.filter( (l,i) => i !== index)
+  deletePolyline(key, event){
+    this.state.polylines = this.state.polylines.filter( line => line.key !== key)
     this.updatePolylines()
   }
 
   onImport(lines) {
     console.log("import", lines)
-    const size = this.state.polylines.length
     lines.forEach((line, i) => {
       var color = parseHSV(this.hue, 1, 1)
       this.hue += 0.35
       this.hue -= Math.floor(this.hue)
+      this.cnt += 1
       this.state.polylines.push({
+        key: this.cnt,
         color: color,
         visible: true,
-        name: `polyline-${size + i}`,
+        name: `polyline-${this.cnt}`,
         setting: false,
         points: line,
       })
@@ -89,13 +91,13 @@ export default class Editor extends React.Component {
               <div className="polyline-scroll">
                 <table>
                   <tbody>
-                    {this.state.polylines.map((polyline, index) => (
-                      <tr key={index}
+                    {this.state.polylines.map((polyline) => (
+                      <tr key={polyline.key}
                         className="polyline-frame">
                         <td>
                           <input
                             className="toggle-visible"
-                            id={`toggle-${index}`}
+                            id={`toggle-${polyline.key}`}
                             type="checkbox"
                             checked={polyline.visible}
                             onChange={this.onPolylineVisibleChanged.bind(this, polyline)}
@@ -111,7 +113,7 @@ export default class Editor extends React.Component {
                         <td>
                           <img className="action-button delete"
                             src={img_delete}
-                            onClick={this.deletePolyline.bind(this)}></img>
+                            onClick={this.deletePolyline.bind(this, polyline.key)}></img>
                         </td>
                         <td>
                           <div className="polyline-setting">

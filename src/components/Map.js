@@ -113,7 +113,7 @@ export class MapContainer extends React.Component {
 						>
 							{this.state.polylines.filter( line => line.visible).map( (line,index) => (
 								<Polyline
-									key={index}
+									key={line.key}
 									path={line.points}
 									strokeColor={line.color}
 									strokeWeight={2}
