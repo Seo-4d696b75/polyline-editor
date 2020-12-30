@@ -70,15 +70,12 @@ export class MapContainer extends React.Component {
 				lat: event.latLng.lat(),
 				lng: event.latLng.lng()
 			};
-			var last = this.edit_info.last_position
-			if (!last || Math.pow(pos.lat - last.lat, 2) + Math.pow(pos.lng - last.lng, 2) > Math.pow(10, -8)) {
-				this.updateEditMarker(pos)
-			}
+			this.updateEditMarker(pos)
+
 		}
 	}
 
 	onMouseOutPolyline() {
-		console.log("mouseout")
 		this.setState(Object.assign({}, this.state, {
 			edit_points: [],
 		}))
@@ -147,8 +144,13 @@ export class MapContainer extends React.Component {
 		if (this.state.edit_points.length === 3 &&
 			this.state.edit_points[0].index === i1 &&
 			this.state.edit_points[2].index === i2) return
-		this.setState(Object.assign({}, this.state, {
-			edit_points: [
+		var points = []
+		var dist = Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lng - p2.lng, 2))
+		var zoom = this.map.getZoom()
+		dist *= Math.pow(2, zoom)
+		// no prompt marker shown if too narrow 
+		if ( dist  >  40 ){
+			points =  [
 				{
 					position: p1,
 					type: "exist",
@@ -168,6 +170,9 @@ export class MapContainer extends React.Component {
 					index: i2,
 				},
 			]
+		}
+		this.setState(Object.assign({}, this.state, {
+			edit_points: points
 		}))
 	}
 
@@ -226,7 +231,7 @@ export class MapContainer extends React.Component {
 		}
 		line.version += 1
 		this.setState(Object.assign({}, this.state, {
-			new_line: [],
+			new_points: [],
 		}))
 		this.props.onUpdate()
 	}
