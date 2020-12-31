@@ -17,11 +17,6 @@ export class MapContainer extends React.Component {
 			edit_option: null,
 		};
 		this.map_ref = React.createRef();
-		this.edit_info = {
-			mouse_over: false,
-			last_position: null,
-		}
-		this.edit_target = React.createRef();
 		this.new_line = React.createRef();
 	}
 
@@ -86,42 +81,18 @@ export class MapContainer extends React.Component {
 		}
 	}
 
-
-	onMouseMoveOverPolyline(event) {
-		if (this.edit_info.mouse_over) {
-			const pos = {
-				lat: event.latLng.lat(),
-				lng: event.latLng.lng()
-			};
-			this.updateEditMarker(pos)
-
-		}
-	}
-
 	onMouseOutPolyline() {
 		this.setState(Object.assign({}, this.state, {
 			edit_points: [],
 		}))
-		this.edit_info.mouse_over = false
-		this.edit_info.last_position = null
 	}
 
-	onMouseOverPolyline(param1, param2, event) {
+	updateEditMarkers(event) {
+		if ( this.state.edit_option ) return
 		const pos = {
 			lat: event.latLng.lat(),
 			lng: event.latLng.lng()
 		};
-		if (this.edit_target.current) {
-			// onMousemove event not working on Polyline component!!
-			this.edit_target.current.polyline.addListener("mousemove", this.onMouseMoveOverPolyline.bind(this))
-		}
-
-		this.edit_info.mouse_over = true;
-		this.edit_info.last_position = pos;
-		this.updateEditMarker(pos)
-	}
-
-	updateEditMarker(pos) {
 		const line = this.props.edit
 		if (!line || line.points.length < 2) return
 		var i1 = Utils.findClosedIndex(pos, line.points)
@@ -246,13 +217,14 @@ export class MapContainer extends React.Component {
 				edit_option: {
 					point: edit,
 					marker: marker,
+					line: this.props.edit,
 				}
 			}))
 		}
 	}
 
 	cutPolyline() {
-		const line = this.props.edit
+		const line = this.state.edit_option.line
 		const name = line.name
 		const points = line.points
 		const point = this.state.edit_option.point
@@ -271,18 +243,20 @@ export class MapContainer extends React.Component {
 		}).flat()
 		console.log("cut", name, `index:${point.index}`)
 		this.props.onUpdate(lines)
-		this.setState(Object.assign({}, this.state, {
-			edit_option: null,
-			edit_points: [],
-		}))
+		this.closeEditOption()
 	}
 
 	deletePoint() {
-		const line = this.props.edit
+		const line = this.state.edit_option.line
 		const point = this.state.edit_option.point
 		console.log("delete", line.name, `index:${point.index}`)
 		line.points = line.points.filter((p, i) => i !== point.index)
 		this.props.onUpdate()
+		this.closeEditOption()
+	}
+
+	closeEditOption(){
+
 		this.setState(Object.assign({}, this.state, {
 			edit_option: null,
 			edit_points: [],
@@ -290,6 +264,12 @@ export class MapContainer extends React.Component {
 	}
 
 	render() {
+		// check this.prop?.edit === this.state?.edit_option?.line
+		if ( this.state.edit_option ){
+			if ( !this.props.edit || this.state.edit_option.line.key !== this.props.edit.key ){
+				this.state.edit_option = null
+			}
+		} 
 		return (
 			<div className='Map-container'>
 				<div className='Map-relative' ref={this.map_ref}>
@@ -338,7 +318,6 @@ export class MapContainer extends React.Component {
 							}).flat()}
 						{this.props.edit ? (
 							<Polyline
-								ref={this.edit_target}
 								key={getKey(this.props.edit, "edit")}
 								path={this.props.edit.points}
 								strokeColor={this.props.edit.color}
@@ -346,11 +325,15 @@ export class MapContainer extends React.Component {
 								strokeOpacity={0.1}
 								fillOpacity={0.0}
 								clickable={true}
-								onMouseover={this.onMouseOverPolyline.bind(this)}
 								onMouseout={this.onMouseOutPolyline.bind(this)}
+								ref={(current) => {
+									// onMousemove event not working on Polyline component!!
+									if(current) current.polyline.addListener("mousemove", this.updateEditMarkers.bind(this))
+		
+								}}
 							/>
 						) : null}
-						{this.state.edit_points.map(edit => {
+						{this.props.edit ? (this.state.edit_option ? [this.state.edit_option.point] : this.state.edit_points).map(edit => {
 							const line = this.props.edit
 							const refCallback = (c) => {
 								// "drag" event not working in Mark component
@@ -379,7 +362,7 @@ export class MapContainer extends React.Component {
 
 								</Marker>
 							)
-						})}
+						}) : null }
 							<InfoWindow
 								visible={!!this.state.edit_option}
 								marker={this.state.edit_option ? this.state.edit_option.marker : null}
@@ -394,7 +377,8 @@ export class MapContainer extends React.Component {
 									if (remove) {
 										remove.onclick = this.deletePoint.bind(this)
 									}
-								}}>
+								}}
+								onClose={this.closeEditOption.bind(this)}>
 
 								<div className="edit-option">
 									<img
