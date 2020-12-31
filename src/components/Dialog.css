@@ -64,4 +64,5 @@
 .invalid{
   color: red;
   font-size: small;
+  margin: 4px;
 }
