@@ -2,7 +2,8 @@ import React from 'react';
 import './Editor.css';
 import Map from "./Map"
 import img_setting from "../img/ic_settings.png";
-import img_delete from "../img/ic_delete.png";
+import img_delete from "../img/ic_trash.png";
+import img_close from "../img/ic_delete.png";
 import img_export from "../img/ic_upload.png";
 import { CSSTransition } from "react-transition-group";
 import * as Action from "../script/Actions";
@@ -75,23 +76,30 @@ export default class Editor extends React.Component {
     this.updatePolylines(this.state.polylines)
   }
 
+  getLineProps(){
+    var color = parseHSV(this.hue, 1, 1)
+    this.hue += 0.35
+    this.hue -= Math.floor(this.hue)
+    this.cnt += 1
+    var key = this.cnt
+    return {
+      key: key,
+      version: 0,
+      color: color,
+      stroke: true,
+      visible: true,
+      name: `polyline-${key}`,
+      setting: false,
+      points: [],
+    }
+  }
+
   onImport(lines) {
     console.log("import", lines)
     lines.forEach((line, i) => {
-      var color = parseHSV(this.hue, 1, 1)
-      this.hue += 0.35
-      this.hue -= Math.floor(this.hue)
-      this.cnt += 1
-      this.state.polylines.push({
-        key: this.cnt,
-        version: 0,
-        color: color,
-        stroke: true,
-        visible: true,
-        name: `polyline-${this.cnt}`,
-        setting: false,
-        points: line,
-      })
+      var obj = this.getLineProps()
+      obj.points = line
+      this.state.polylines.push(obj)
     })
     this.updatePolylines(this.state.polylines)
   }
@@ -159,7 +167,7 @@ export default class Editor extends React.Component {
                                 <div className="polyline-setting-frame">
 
                                   <img
-                                    src={img_delete}
+                                    src={img_close}
                                     alt="close dialog"
                                     className="action-button close"
                                     onClick={this.closeSetting.bind(this, polyline)} />
@@ -220,7 +228,8 @@ export default class Editor extends React.Component {
       <Map
         polylines={this.state.polylines}
         edit={this.state.edit_line}
-        onUpdate={this.updatePolylines.bind(this)}/>
+        onUpdate={this.updatePolylines.bind(this)}
+        onAdd={this.getLineProps.bind(this)}/>
       </div>
     )
   }

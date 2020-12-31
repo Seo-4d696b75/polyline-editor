@@ -31,7 +31,7 @@ p {
 
 .polyline-frame {
   width: 300px;
-	background-color: rgba(255,255,255,0.9);
+	background-color: rgba(255,255,255,1);
 	border-radius: 4px 4px 4px 4px;
   box-shadow: 2px 2px 4px grey;
 }
@@ -73,8 +73,8 @@ p {
   filter: brightness(60%)
 }
 
-.action-button.export{
-  padding: 2px;
+.action-button.setting{
+  padding: 0px;
 }
 
 .action-button.setting:hover{  
@@ -86,6 +86,7 @@ p {
 	width: 30px;
 	height: 30px;
 	cursor: pointer;
+  padding: 2px;
 }
 
 .action-button:hover {
