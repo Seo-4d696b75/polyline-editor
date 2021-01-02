@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './Dialog.css';
 import Data from "../script/DataStore";
-import { Modal, Button, Form, Col, Row, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Modal, Button, Form, Col, Dropdown, DropdownButton } from 'react-bootstrap';
 import * as Action from '../script/Actions'
 
 export default class Dialog extends React.Component {
@@ -208,6 +208,7 @@ export default class Dialog extends React.Component {
             this.exportPolyline(format)
             break
           }
+          default:
         }
         return
       }
@@ -218,8 +219,8 @@ export default class Dialog extends React.Component {
   }
 
   importPolyline(format, text) {
-    format = format.replace(/\$<lat>/, '(?<lat>[0-9\.]+)')
-    format = format.replace(/\$<lng>/, '(?<lng>[0-9\.]+)')
+    format = format.replace(/\$<lat>/, '(?<lat>[0-9\\.]+)')
+    format = format.replace(/\$<lng>/, '(?<lng>[0-9\\.]+)')
     var lines = []
     var points = []
     text.split(/\n/).forEach(line => {

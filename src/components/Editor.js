@@ -35,7 +35,9 @@ export default class Editor extends React.Component {
     var value = event.currentTarget.checked
     line.visible = value
     if ( !value && this.state.edit_line && this.state.edit_line.key === line.key ){
-      this.state.edit_line = null
+      this.setState(Object.assign({}, this.state, {
+        edit_line: null
+      }))
     }
     this.updatePolylines(this.state.polylines)
   }
@@ -110,7 +112,7 @@ export default class Editor extends React.Component {
       <div className="editor-container">
         <div className="editor-relative">
           <p className="panel-title">ポリライン一覧</p>
-          {this.state.polylines.length == 0 ? (
+          {this.state.polylines.length === 0 ? (
             <div className="import-hint">表示するデータがありません</div>
           ) : (
 
@@ -142,11 +144,13 @@ export default class Editor extends React.Component {
                         <td>
                           <img className="action-button export"
                             src={img_export}
+                            alt="export"
                             onClick={() => Action.requestExport(polyline.points)}></img>
                         </td>
                         <td>
                           <img className="action-button delete"
                             src={img_delete}
+                            alt="delete"
                             onClick={this.deletePolyline.bind(this, polyline.key)}></img>
                         </td>
                         <td>

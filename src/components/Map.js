@@ -5,6 +5,7 @@ import Data from "../script/DataStore";
 import * as Utils from "../script/utils"
 import img_delete from "../img/ic_trash.png";
 import img_cut from "../img/ic_cut.png";
+import img_edit from "../img/ic_edit.png";
 
 
 export class MapContainer extends React.Component {
@@ -88,7 +89,7 @@ export class MapContainer extends React.Component {
 	}
 
 	updateEditMarkers(event) {
-		if ( this.state.edit_option ) return
+		if (this.state.edit_option) return
 		const pos = {
 			lat: event.latLng.lat(),
 			lng: event.latLng.lng()
@@ -212,14 +213,17 @@ export class MapContainer extends React.Component {
 
 	showEditOption(edit, props, marker, event) {
 		if (edit.type === "exist") {
-
-			this.setState(Object.assign({}, this.state, {
-				edit_option: {
-					point: edit,
-					marker: marker,
-					line: this.props.edit,
-				}
-			}))
+			const line = this.props.edit
+			if (line) {
+				this.setState(Object.assign({}, this.state, {
+					edit_option: {
+						point: edit,
+						marker: marker,
+						line: line,
+						terminal: (edit.index === 0 || edit.index === line.points.length - 1),
+					}
+				}))
+			}
 		}
 	}
 
@@ -255,7 +259,11 @@ export class MapContainer extends React.Component {
 		this.closeEditOption()
 	}
 
-	closeEditOption(){
+	startPolylineExtension() {
+		this.closeEditOption()
+	}
+
+	closeEditOption() {
 
 		this.setState(Object.assign({}, this.state, {
 			edit_option: null,
@@ -265,11 +273,13 @@ export class MapContainer extends React.Component {
 
 	render() {
 		// check this.prop?.edit === this.state?.edit_option?.line
-		if ( this.state.edit_option ){
-			if ( !this.props.edit || this.state.edit_option.line.key !== this.props.edit.key ){
-				this.state.edit_option = null
+		if (this.state.edit_option) {
+			if (!this.props.edit || this.state.edit_option.line.key !== this.props.edit.key) {
+				this.setState(Object.assign({}, this.state, {
+					edit_option: null,
+				}))
 			}
-		} 
+		}
 		return (
 			<div className='Map-container'>
 				<div className='Map-relative' ref={this.map_ref}>
@@ -328,8 +338,8 @@ export class MapContainer extends React.Component {
 								onMouseout={this.onMouseOutPolyline.bind(this)}
 								ref={(current) => {
 									// onMousemove event not working on Polyline component!!
-									if(current) current.polyline.addListener("mousemove", this.updateEditMarkers.bind(this))
-		
+									if (current) current.polyline.addListener("mousemove", this.updateEditMarkers.bind(this))
+
 								}}
 							/>
 						) : null}
@@ -362,37 +372,49 @@ export class MapContainer extends React.Component {
 
 								</Marker>
 							)
-						}) : null }
-							<InfoWindow
-								visible={!!this.state.edit_option}
-								marker={this.state.edit_option ? this.state.edit_option.marker : null}
-								onOpen={() => {
-									// content of InfoWindow is passed as string value,
-									// onClick callback object not registered via props
-									var cut = document.getElementById("action-button-edit-cut")
-									var remove = document.getElementById("action-button-edit-delete")
-									if (cut) {
-										cut.onclick = this.cutPolyline.bind(this)
-									}
-									if (remove) {
-										remove.onclick = this.deletePoint.bind(this)
-									}
-								}}
-								onClose={this.closeEditOption.bind(this)}>
+						}) : null}
+						<InfoWindow
+							visible={!!this.state.edit_option}
+							marker={this.state.edit_option ? this.state.edit_option.marker : null}
+							onOpen={() => {
+								// content of InfoWindow is passed as string value,
+								// onClick callback object not registered via props
+								var cut = document.getElementById("action-button-edit-cut")
+								var remove = document.getElementById("action-button-edit-delete")
+								var extend = document.getElementById("action-button-edit-extend")
+								if (cut) {
+									cut.onclick = this.cutPolyline.bind(this)
+								}
+								if (remove) {
+									remove.onclick = this.deletePoint.bind(this)
+								}
+								if (extend) {
+									extend.onclick = this.startPolylineExtension.bind(this)
+								}
+							}}
+							onClose={this.closeEditOption.bind(this)}>
 
-								<div className="edit-option">
+							<div className="edit-option">
+								{this.state.edit_option && this.state.edit_option.terminal ? (
 									<img
-										id="action-button-edit-cut"
+										id="action-button-edit-extend"
 										className="action-button cut"
 										alt="cut"
-										src={img_cut} />
-									<img
-										id="action-button-edit-delete"
-										className="action-button delete"
-										alt="delete"
-										src={img_delete} />
-								</div>
-							</InfoWindow>
+										src={img_edit} />
+								) : (
+										<img
+											id="action-button-edit-cut"
+											className="action-button cut"
+											alt="cut"
+											src={img_cut} />
+									)}
+								<img
+									id="action-button-edit-delete"
+									className="action-button delete"
+									alt="delete"
+									src={img_delete} />
+							</div>
+						</InfoWindow>
 						{this.props.edit ? (
 
 							<Polyline
