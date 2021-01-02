@@ -10,6 +10,22 @@ export function updateMarkers(line,event){
   if (!line || line.points.length < 2) return
   var i1 = Utils.findClosedIndex(pos, line.points)
   var p1 = line.points[i1]
+  if ( this.state.edit_extend ){
+    var list = this.state.edit_points
+    var exist = list.find( p => p.type === "extend-target")
+    if ( exist && exist.line.key === line.key && exist.index === i1 ) return
+    list = list.filter( p => p.type === "extend")
+    list.push({
+      position: p1,
+      index: i1,
+      type: "extend-target",
+      line: line,
+    })
+    this.setState(Object.assign({}, this.state, {
+      edit_points: list
+    }))
+    return
+  }
   var i2 = null
   if (i1 === 0) {
     i2 = 1
@@ -70,7 +86,7 @@ export function updateMarkers(line,event){
 
 export function closeMarkers(){
   this.setState(Object.assign({}, this.state, {
-    edit_points: [],
+    edit_points: this.state.edit_points.filter(p => p.type === "extend"),
   }))
 }
 
@@ -83,7 +99,7 @@ export function updateNewLine(edit, pos){
     path.push(pos)
     path.push(line.points[edit.index])
   } else if (edit.type === "exist") {
-    if (edit.index > 1) path.push(line.points[edit.index - 1])
+    if (edit.index > 0) path.push(line.points[edit.index - 1])
     path.push(pos)
     if (edit.index < line.points.length - 1) path.push(line.points[edit.index + 1])
   }
@@ -136,6 +152,15 @@ export function showOption(edit, marker){
         type: "extend",
       },
     }))
+  } else if (edit.type === "extend-target"){
+    this.setState(Object.assign({}, this.state, {
+      edit_option: {
+        point: edit,
+        line: edit.line,
+        marker: marker,
+        type: "extend-target",
+      },
+    }))
   }
 }
 
@@ -150,6 +175,7 @@ export function cutPolyline(option){
   var lines = this.props.polylines.map(l => {
     if (l.key === line.key) {
       line.name = `${name}-1`
+      line.version += 1
       line.points = points.filter((p, i) => i <= point.index)
       new_line.name = `${name}-2`
       new_line.points = points.filter((p, i) => i >= point.index)

@@ -10,6 +10,7 @@ import img_cut from "../img/ic_cut.png";
 import img_edit from "../img/ic_edit.png";
 import img_done from "../img/ic_check.png"
 import img_merge from "../img/ic_append.png"
+import img_copy from "../img/ic_copy.png"
 
 export class MapContainer extends React.Component {
 
@@ -69,7 +70,12 @@ export class MapContainer extends React.Component {
 	}
 
 	onMapClicked(props, map, event) {
-		Extension.addPoint.call(this, event)
+		
+    const pos = {
+      lat: event.latLng.lat(),
+      lng: event.latLng.lng()
+    }
+		Extension.addPoint.call(this, pos)
 	}
 
 	onImport(lines) {
@@ -120,8 +126,8 @@ export class MapContainer extends React.Component {
 
 		this.setState(Object.assign({}, this.state, {
 			edit_option: null,
-			edit_points: [],
 		}))
+		Edit.closeMarkers.call(this)
 	}
 
 	render() {
@@ -186,7 +192,10 @@ export class MapContainer extends React.Component {
 									onMouseout={Edit.closeMarkers.bind(this)}
 									ref={(current) => {
 										// onMousemove event not working on Polyline component!!
-										if (current) current.polyline.addListener("mousemove", Edit.updateMarkers.bind(this, line))
+										if (current) current.polyline.addListener("mousemove", (event) =>{
+											Extension.update.call(this, event)
+											Edit.updateMarkers.call(this, line, event)
+										} )
 
 									}}
 								/>
@@ -260,15 +269,25 @@ export class MapContainer extends React.Component {
 				extend.onclick = Extension.start.bind(this, option.point)
 			}
 			var comp = document.getElementById("action-button-edit-extend-complete")
-			if (comp){
+			if (comp) {
 				comp.onclick = Extension.complete.bind(this)
 			}
 			var back = document.getElementById("action-button-edit-extend-back")
-			if (back){
+			if (back) {
 				back.onclick = Extension.undoPoint.bind(this)
 			}
+			var copy = document.getElementById("action-button-edit-extend-copy")
+			if (copy) {
+				copy.onclick = Extension.addPoint.bind(this, option.point.position)
+			}
+			var merge = document.getElementById("action-button-edit-extend-merge")
+			if (merge) {
+				merge.onclick = Extension.merge.bind(this, option.point)
+			}
 		}
-		var content = null
+		var content = (
+			<div>nothing to show</div>
+		)
 		if (option) {
 			switch (option.type) {
 				case "middle":
@@ -316,6 +335,22 @@ export class MapContainer extends React.Component {
 								className="action-button delete"
 								alt="back"
 								src={img_delete} />
+						</div>
+					)
+					break
+				case "extend-target":
+					content = (
+						<div className="edit-option">
+							<img
+								id="action-button-edit-extend-copy"
+								className="action-button cut"
+								alt="complete"
+								src={img_copy} />
+							<img
+								id="action-button-edit-extend-merge"
+								className="action-button delete"
+								alt="back"
+								src={img_merge} />
 						</div>
 					)
 					break
