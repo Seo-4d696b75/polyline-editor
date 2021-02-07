@@ -1,0 +1,23 @@
+
+
+.Map-relative{
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.Map{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	bottom: 0px;
+	z-index: 5;
+}
+
+.edit-option{
+	padding: 0px;
+	display: flex;
+	width: 60px;
+	height: 30px;
+}
