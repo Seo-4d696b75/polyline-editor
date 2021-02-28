@@ -46,40 +46,48 @@ export default class Dialog extends React.Component<{}, DialogState> {
 
   showDialog(type: string, value: any) {
     console.log("show dialog", type, value)
-    this.setState(Object.assign({}, this.state, {
-      show: true,
-      type: type,
-      text: "",
-      invalid_format: false,
-      invalid_text: false,
-      points: (type === "Export") ? (value as Polyline) : null
-    }));
-    this.focus_ref = null
-    setTimeout(() => {
-      if ( this.focus_ref ) this.focus_ref.focus()
-    }, 100)
+    if (type === "Import" || type === "Export") {
+
+      this.setState({
+        ...this.state,
+        show: true,
+        type: type,
+        text: "",
+        invalid_format: false,
+        invalid_text: false,
+        points: (type === "Export") ? (value as Polyline) : null
+      })
+      this.focus_ref = null
+      setTimeout(() => {
+        if (this.focus_ref) this.focus_ref.focus()
+      }, 100)
+    }
   }
 
   renderDialog() {
     const setText = (event: React.ChangeEvent<FormControlElement>) => {
-      this.setState(Object.assign({}, this.state, {
+      this.setState({
+        ...this.state,
         text: event.target.value
-      }))
+      })
     }
     const setFormat = (event: React.ChangeEvent<FormControlElement>) => {
-      this.setState(Object.assign({}, this.state, {
+      this.setState({
+        ...this.state,
         format: event.target.value
-      }))
+      })
     }
     const selectFormat = (eventKey: string | null, e: React.SyntheticEvent<unknown>) => {
-      this.setState(Object.assign({}, this.state, {
-        format: eventKey
-      }))
+      this.setState({
+        ...this.state,
+        format: eventKey ? eventKey : ""
+      })
     }
     const setDigit = (event: React.ChangeEvent<FormControlElement>) => {
-      this.setState(Object.assign({}, this.state, {
-        digit: event.target.value
-      }))
+      this.setState({
+        ...this.state,
+        digit: parseInt(event.target.value),
+      })
     }
     const copy = (event: any) => {
       if (navigator.clipboard) {
@@ -121,7 +129,7 @@ export default class Dialog extends React.Component<{}, DialogState> {
                 size="sm"
                 onChange={setText}
                 ref={(c: HTMLTextAreaElement | null) => {
-                  if ( c ) this.focus_ref = c
+                  if (c) this.focus_ref = c
                 }} />
               {this.state.invalid_text ? <div className="invalid">有効なデータが見つかりません</div> : null}
             </FormGroup>
@@ -168,7 +176,6 @@ export default class Dialog extends React.Component<{}, DialogState> {
               <Col xs={2}>
                 <Button
                   variant="primary"
-                  type="submit"
                   onClick={this.submit.bind(this)}>
                   Export
                   </Button>
@@ -200,9 +207,10 @@ export default class Dialog extends React.Component<{}, DialogState> {
   }
 
   closeModal() {
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       show: false,
-    }))
+    })
   }
 
   submit() {
@@ -230,9 +238,10 @@ export default class Dialog extends React.Component<{}, DialogState> {
         return
       }
     }
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       invalid_format: true,
-    }))
+    })
   }
 
   importPolyline(format: string, text: string) {
@@ -250,12 +259,12 @@ export default class Dialog extends React.Component<{}, DialogState> {
           var lat = parseFloat(match.groups.lat)
           var lng = parseFloat(match.groups.lng)
           if (lat > -90 && lat < 90 && lng >= -180 && lng <= 180) {
-            points.push( { lat: lat, lng: lng } )
+            points.push({ lat: lat, lng: lng })
             cnt += 1
           }
         }
       }
-      if ( cnt === 0 && points.length > 0) {
+      if (cnt === 0 && points.length > 0) {
         lines.push(points)
         points = []
       }
@@ -267,9 +276,10 @@ export default class Dialog extends React.Component<{}, DialogState> {
       Action.importPolyline(lines)
       this.closeModal()
     } else {
-      this.setState(Object.assign({}, this.state, {
+      this.setState({
+        ...this.state,
         invalid_text: true,
-      }))
+      })
     }
   }
 
@@ -282,9 +292,10 @@ export default class Dialog extends React.Component<{}, DialogState> {
         line = line.replace("$<lng>", p.lng.toFixed(digit))
         return line
       }).join("\n")
-      this.setState(Object.assign({}, this.state, {
+      this.setState({
+        ...this.state,
         text: text,
-      }))
+      })
     }
   }
 
