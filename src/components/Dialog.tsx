@@ -189,33 +189,29 @@ class Dialog extends React.Component<DialogProps, DialogState> {
   }
 
   closeModal() {
+    this.setState({
+      ...this.state,
+      text: ""
+    })
     Action.closeDialog()
   }
 
   submit() {
     const format = this.state.format
-    var match = format.match(/\$<(.+?)>/g)
-    if (match && match.length === 2) {
-      var checked = false
-      if (match[0] === "$<lat>" && match[1] === "$<lng>") {
-        checked = true
-      } else if (match[0] === "$<lng>" && match[1] === "$<lat>") {
-        checked = true
-      }
-      if (checked) {
-        switch (this.props?.dialog?.type) {
-          case ModalType.Import: {
-            this.importPolyline(format, this.state.text)
-            break
-          }
-          case ModalType.Export: {
-            this.exportPolyline(format, this.state.points)
-            break
-          }
-          default:
+    var match = format.match(/\$<(lat|lng)>/g)
+    if (match && match.length === 2 && match[0] !== match[1]) {
+      switch (this.props?.dialog?.type) {
+        case ModalType.Import: {
+          this.importPolyline(format, this.state.text)
+          break
         }
-        return
+        case ModalType.Export: {
+          this.exportPolyline(format, this.props.dialog.value)
+          break
+        }
+        default:
       }
+      return
     }
     this.setState({
       ...this.state,

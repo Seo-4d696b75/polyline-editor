@@ -188,6 +188,23 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 										visible={line.visible}
 										key={getKey(line, i)}
 										position={point}
+										draggable={true}
+										ref={(current: any) => {
+											if ( current ){
+												if ( current.marker instanceof google.maps.Marker ){
+													current.marker.addListener("dragend", (e: any) => {
+														this.onMarkerDragEnd({
+															position: point,
+															type: "exist",
+															index: i,
+															line: line
+														}, e)
+													})
+												} else {
+													console.error("fail to find google.maps.Marker in " , current)
+												}
+											}
+										}}
 										icon={icon} />
 								))
 							}).flat()}
