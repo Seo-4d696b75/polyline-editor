@@ -1,16 +1,24 @@
 import React, { FormEvent } from 'react';
 import './Dialog.css';
-import Data from "../script/DataStore";
 import { Modal, Button, Form, Col, DropdownButton, Dropdown, FormControl, FormLabel, Row, FormGroup } from 'react-bootstrap';
 import * as Action from '../script/Actions'
 import { Polyline } from "../script/types"
+import { GlobalState, ImportModalProps, ExportModalProps, ModalType } from '../script/Reducer'
+import { connect } from "react-redux"
 
 type FormControlElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
+function mapState2Props(state: GlobalState): DialogProps{
+  return {
+    dialog: state.modal
+  }
+}
+
+interface DialogProps {
+  dialog: ImportModalProps | ExportModalProps | null
+}
 
 interface DialogState {
-  show: boolean
-  type: "Import" | "Export" | null
   format: string
   text: string
   invalid_format: boolean
@@ -19,11 +27,10 @@ interface DialogState {
   points: Polyline | null
 }
 
-export default class Dialog extends React.Component<{}, DialogState> {
+
+class Dialog extends React.Component<DialogProps, DialogState> {
 
   state: DialogState = {
-    show: false,
-    type: null,
     format: "$<lat>,$<lng>",
     text: "",
     invalid_format: false,
@@ -33,36 +40,6 @@ export default class Dialog extends React.Component<{}, DialogState> {
   }
 
   focus_ref: HTMLTextAreaElement | null = null
-
-  componentDidMount() {
-    Data.on("onImportRequested", this.showDialog.bind(this, "Import"))
-    Data.on("onExportRequested", this.showDialog.bind(this, "Export"))
-  }
-
-  componentWillUnmount() {
-    Data.removeAllListeners("onImportRequested")
-    Data.removeAllListeners("onExportRequested")
-  }
-
-  showDialog(type: string, value: any) {
-    console.log("show dialog", type, value)
-    if (type === "Import" || type === "Export") {
-
-      this.setState({
-        ...this.state,
-        show: true,
-        type: type,
-        text: "",
-        invalid_format: false,
-        invalid_text: false,
-        points: (type === "Export") ? (value as Polyline) : null
-      })
-      this.focus_ref = null
-      setTimeout(() => {
-        if (this.focus_ref) this.focus_ref.focus()
-      }, 100)
-    }
-  }
 
   renderDialog() {
     const setText = (event: React.ChangeEvent<FormControlElement>) => {
@@ -94,8 +71,9 @@ export default class Dialog extends React.Component<{}, DialogState> {
         navigator.clipboard.writeText(this.state.text)
       }
     }
-    switch (this.state.type) {
-      case "Import": {
+    if (!this.props.dialog ) return null
+    switch (this.props.dialog.type) {
+      case ModalType.Import: {
         return (
           <Form>
             <FormLabel>座標のフォーマット</FormLabel>
@@ -129,7 +107,11 @@ export default class Dialog extends React.Component<{}, DialogState> {
                 size="sm"
                 onChange={setText}
                 ref={(c: HTMLTextAreaElement | null) => {
-                  if (c) this.focus_ref = c
+                  if (c) {
+                    setTimeout(() => {
+                      c.focus()
+                    }, 100);
+                  }
                 }} />
               {this.state.invalid_text ? <div className="invalid">有効なデータが見つかりません</div> : null}
             </FormGroup>
@@ -137,7 +119,7 @@ export default class Dialog extends React.Component<{}, DialogState> {
           </Form>
         )
       }
-      case "Export": {
+      case ModalType.Export: {
         return (
           <Form>
             <FormLabel>座標のフォーマット</FormLabel>
@@ -207,10 +189,7 @@ export default class Dialog extends React.Component<{}, DialogState> {
   }
 
   closeModal() {
-    this.setState({
-      ...this.state,
-      show: false,
-    })
+    Action.closeDialog()
   }
 
   submit() {
@@ -224,12 +203,12 @@ export default class Dialog extends React.Component<{}, DialogState> {
         checked = true
       }
       if (checked) {
-        switch (this.state.type) {
-          case "Import": {
+        switch (this.props?.dialog?.type ) {
+          case ModalType.Import: {
             this.importPolyline(format, this.state.text)
             break
           }
-          case "Export": {
+          case ModalType.Export: {
             this.exportPolyline(format, this.state.points)
             break
           }
@@ -302,7 +281,7 @@ export default class Dialog extends React.Component<{}, DialogState> {
   render() {
     return (
       <div>
-        <Modal show={this.state.show} onHide={this.closeModal.bind(this)} id="edit">
+        <Modal show={this.props.dialog !== null} onHide={this.closeModal.bind(this)} id="edit">
           <Modal.Body className="modal-body">
             {this.renderDialog()}
           </Modal.Body>
@@ -313,7 +292,7 @@ export default class Dialog extends React.Component<{}, DialogState> {
               onClick={this.closeModal.bind(this)}>
               Close
               </Button>
-            {this.state.type === "Import" ? (
+            {this.props.dialog?.type === ModalType.Import ? (
               <Button
                 variant="primary"
                 type="submit"
@@ -327,3 +306,5 @@ export default class Dialog extends React.Component<{}, DialogState> {
     )
   }
 }
+
+export default connect(mapState2Props)(Dialog)

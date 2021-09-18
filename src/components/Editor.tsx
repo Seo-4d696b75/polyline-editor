@@ -8,105 +8,55 @@ import img_export from "../img/ic_upload.png";
 import { CSSTransition } from "react-transition-group";
 import * as Action from "../script/Actions";
 import { Button } from "react-bootstrap";
-import Data from "../script/DataStore";
-import { parseHSV } from "../script/color";
 import {PolylineProps, Polyline} from "../script/types"
+import {MapProps} from "./Map"
+import { GlobalState } from "../script/Reducer";
+import { connect } from 'react-redux';
 
-interface EditorState {
-  polylines: Array<PolylineProps>
-  edit_line: PolylineProps | null
+function mapState2Props(state: GlobalState): MapProps{
+	return {
+		polylines: state.lines,
+		target: state.target,
+		focus: state.focus_map,
+	}
 }
 
-export default class Editor extends React.Component<{}, EditorState> {
-
-  hue = 0.0
-  cnt = 0
-  state: EditorState = {
-    polylines: [],
-    edit_line: null,
-  }
-
-  componentDidMount() {
-    Data.on("onImport", this.onImport.bind(this))
-  }
-
-  componentWillUnmount() {
-    Data.removeAllListeners("onImport")
-  }
+class Editor extends React.Component<MapProps, {}> {
 
   onPolylineVisibleChanged(line: PolylineProps, event?: any) {
     var value = event.currentTarget.checked
     line.visible = value
-    if ( !value && this.state.edit_line && this.state.edit_line.key === line.key ){
-      this.setState(Object.assign({}, this.state, {
-        edit_line: null
-      }))
+    if ( !value && this.props.target && this.props.target.key === line.key ){
+      Action.setTarget(null)
     }
-    this.updatePolylines(this.state.polylines)
+    Action.updateLines()
   }
 
   onPolylineSetting(line: PolylineProps, event?: any) {
     line.setting = true
-    this.updatePolylines(this.state.polylines)
+    Action.updateLines()
   }
 
-  updatePolylines(list?: Array<PolylineProps>) {
-    if (!list){
-      list = this.state.polylines
-    }
-    this.setState(Object.assign({}, this.state, {
-      polylines: list
-    }))
-  }
 
   setEditLine(line: PolylineProps){
     line.visible = true
-    this.setState(Object.assign({}, this.state, {
-      edit_line: line,
-    }))
+    Action.setTarget(line)
+    Action.updateLines()
   }
 
   closeSetting(line: PolylineProps, event?: any) {
     line.setting = false
-    this.updatePolylines(this.state.polylines)
+    Action.updateLines()
   }
 
   deletePolyline(key: number, event?: any) {
-    var list = this.state.polylines.filter(line => line.key !== key)
-    this.updatePolylines(list)
+    var list = this.props.polylines.filter(line => line.key !== key)
+    Action.updateLines(list)
   }
 
   setPolylineStyle(line: PolylineProps, stroke: boolean) {
     line.stroke = stroke
-    this.updatePolylines(this.state.polylines)
-  }
-
-  getLineProps(): PolylineProps{
-    var color = parseHSV(this.hue, 1, 1)
-    this.hue += 0.35
-    this.hue -= Math.floor(this.hue)
-    this.cnt += 1
-    var key = this.cnt
-    return {
-      key: key,
-      version: 0,
-      color: color,
-      stroke: true,
-      visible: true,
-      name: `polyline-${key}`,
-      setting: false,
-      points: [],
-    }
-  }
-
-  onImport(lines: Array<Polyline>) {
-    console.log("import", lines)
-    lines.forEach((line, i) => {
-      var obj = this.getLineProps()
-      obj.points = line
-      this.state.polylines.push(obj)
-    })
-    this.updatePolylines(this.state.polylines)
+    Action.updateLines()
   }
 
   render() {
@@ -115,16 +65,16 @@ export default class Editor extends React.Component<{}, EditorState> {
       <div className="editor-container">
         <div className="editor-relative">
           <p className="panel-title">ポリライン一覧</p>
-          {this.state.polylines.length === 0 ? (
+          {this.props.polylines.length === 0 ? (
             <div className="import-hint">表示するデータがありません</div>
           ) : (
 
               <div className="polyline-scroll">
                 <table>
                   <tbody>
-                    {this.state.polylines.map((polyline) => (
+                    {this.props.polylines.map((polyline) => (
                       <tr key={polyline.key}
-                        className={`polyline-frame${(this.state.edit_line && this.state.edit_line.key === polyline.key) ? " edit" : ""}`}>
+                        className={`polyline-frame${(this.props.target && this.props.target.key === polyline.key) ? " edit" : ""}`}>
                         <td>
                           <input
                             className="toggle-visible"
@@ -233,11 +183,12 @@ export default class Editor extends React.Component<{}, EditorState> {
         </div>
       </div>
       <Map
-        polylines={this.state.polylines}
-        edit={this.state.edit_line}
-        onUpdate={this.updatePolylines.bind(this)}
-        onAdd={this.getLineProps.bind(this)}/>
+        polylines={this.props.polylines}
+        target={this.props.target}
+        focus={this.props.focus}/>
       </div>
     )
   }
 }
+
+export default connect(mapState2Props)(Editor)

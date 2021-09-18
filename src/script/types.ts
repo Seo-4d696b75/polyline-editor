@@ -48,10 +48,3 @@ export interface EditOption {
   marker: google.maps.Marker
   type: "terminal" | "middle" | "extend-target" | "extend"
 }
-
-export interface MapState {
-	edit_points: Array<EditPoint>
-	edit_line: PolylineProps | null
-	edit_option: EditOption | null
-	edit_extend: ExtendPoints | null
-}

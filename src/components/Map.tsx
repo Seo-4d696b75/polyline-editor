@@ -3,7 +3,6 @@ import React from "react";
 import "./Map.css";
 import * as Extension from "./PolylineExtension"
 import * as Edit from "./PolylineEdit"
-import Data from "../script/DataStore";
 import * as Utils from "../script/utils"
 import img_delete from "../img/ic_trash.png";
 import img_cut from "../img/ic_cut.png";
@@ -11,17 +10,27 @@ import img_edit from "../img/ic_edit.png";
 import img_done from "../img/ic_check.png"
 import img_merge from "../img/ic_append.png"
 import img_copy from "../img/ic_copy.png"
-import { EditOption, EditPoint, PolylineProps, Bounds, LatLng, MapState } from "../script/types"
+import { EditOption, EditPoint, PolylineProps, Bounds, ExtendPoints } from "../script/types"
+import { PropsEvent } from "../script/Event";
 
-interface MapProps {
-	google: GoogleAPI
-	polylines: Array<PolylineProps>
-	edit: PolylineProps | null
-	onUpdate: ((list?: Array<PolylineProps>) => void)
-	onAdd: (() => PolylineProps)
+interface MapState {
+	edit_points: Array<EditPoint>
+	edit_line: PolylineProps | null
+	edit_option: EditOption | null
+	edit_extend: ExtendPoints | null
 }
 
-export class MapContainer extends React.Component<MapProps, MapState> {
+export interface MapProps {
+	polylines: Array<PolylineProps>
+	target: PolylineProps | null
+	focus: PropsEvent<Bounds>
+}
+
+interface WrappedMapProps extends MapProps {
+	google: GoogleAPI
+}
+
+export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 
 	state: MapState = {
 		edit_points: [],
@@ -35,13 +44,10 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 	new_line = React.createRef<Polyline>();
 	map: google.maps.Map | null = null
 
-	componentDidMount() {
-		Data.on("onImport", this.onImport.bind(this))
-	}
-
-	componentWillUnmount() {
-		Data.removeAllListeners("onImport")
-		this.map = null;
+	componentDidUpdate() {
+		this.props.focus.observe("map", (area: Bounds) => {
+			this.focusAt(area)
+		})
 	}
 
 	onMapReady(props?: IMapProps, map?: google.maps.Map, event?: any) {
@@ -88,13 +94,6 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 			lng: event.latLng.lng()
 		}
 		Extension.addPoint.call(this, pos)
-	}
-
-	onImport(lines: Array<Array<LatLng>>) {
-		var bounds = Utils.sumBounds(
-			lines.map(line => Utils.getBounds(line))
-		)
-		this.focusAt(bounds)
 	}
 
 	focusAt(bounds: Bounds) {
@@ -146,7 +145,7 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 	}
 
 	render() {
-
+		const polylines = this.props.polylines
 		return (
 			<div className='Map-container'>
 				<div className='Map-relative' ref={this.map_ref}>
@@ -169,7 +168,7 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 						mapTypeControl={true}
 
 					>
-						{this.props.polylines.filter(line => line.visible && line.stroke)
+						{polylines.filter(line => line.visible && line.stroke)
 							.map((line) => (
 								<Polyline
 									visible={line.visible}
@@ -181,7 +180,7 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 									fillOpacity={0.5}
 									clickable={false} />
 							))}
-						{this.props.polylines.filter(line => line.visible && !line.stroke)
+						{polylines.filter(line => line.visible && !line.stroke)
 							.map(line => {
 								var icon = `https://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|${line.color.slice(1)}`
 								return line.points.map((point, i) => (
@@ -193,8 +192,8 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 								))
 							}).flat()}
 
-						{this.props.polylines.filter(line => line.visible && line.stroke)
-							.map((line) => (
+						{polylines.filter(line => line.visible && line.stroke)
+							.map((line, i) => (
 								<Polyline
 									key={getKey(line, "edit")}
 									path={line.points}
@@ -203,6 +202,7 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 									strokeOpacity={0}
 									fillOpacity={0.0}
 									clickable={true}
+									zIndex={this.props.target?.key === line.key ? polylines.length : i}
 									onMouseout={Edit.closeMarkers.bind(this)}
 									ref={(current: any) => {
 										// onMousemove event not working on Polyline component!!
@@ -387,7 +387,7 @@ export class MapContainer extends React.Component<MapProps, MapState> {
 		return (
 			<InfoWindow
 				visible={ !!option && option.line.visible}
-				marker={option?.marker}
+				marker={option?.marker ? option?.marker : undefined}
 				onOpen={addCallback}
 				onClose={this.closeEditOption.bind(this)}>
 				{content}

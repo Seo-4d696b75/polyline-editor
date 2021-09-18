@@ -4,14 +4,19 @@ import Header from './Header'
 import Editor from './Editor'
 import Dialog from './Dialog'
 
+import { Provider } from "react-redux"
+import { store } from "../script/Store"
+
 export default class APP extends React.Component {
-	
-	render(){
+
+	render() {
 		return (
 			<div className="App">
-			<Header></Header>
-			<Editor></Editor>
-			<Dialog></Dialog>
+				<Provider store={store}>
+					<Header></Header>
+					<Editor></Editor>
+					<Dialog></Dialog>
+				</Provider>
 			</div>
 		)
 	}

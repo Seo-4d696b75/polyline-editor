@@ -1,6 +1,7 @@
 import * as Utils from "../script/utils"
 import {PolylineProps, EditPoint, LatLng, EditOption} from "../script/types"
 import {MapContainer} from "../components/Map"
+import * as Action from "../script/Actions"
 
 export function updateMarkers(this: MapContainer, line: PolylineProps, event: any){
   
@@ -23,12 +24,13 @@ export function updateMarkers(this: MapContainer, line: PolylineProps, event: an
       type: "extend-target",
       line: line,
     })
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       edit_points: list
-    }))
+    })
     return
   }
-  var i2 = null
+  var i2: number = 0
   if (i1 === 0) {
     i2 = 1
   } else if (i1 === line.points.length - 1) {
@@ -80,16 +82,18 @@ export function updateMarkers(this: MapContainer, line: PolylineProps, event: an
       },
     ]
   }
-  this.setState(Object.assign({}, this.state, {
+  this.setState({
+    ...this.state,
     edit_points: points,
     edit_line: line,
-  }))
+  })
 }
 
 export function closeMarkers(this: MapContainer, ){
-  this.setState(Object.assign({}, this.state, {
+  this.setState({
+    ...this.state,
     edit_points: this.state.edit_points.filter(p => p.type === "extend"),
-  }))
+  })
 }
 
 export function updateNewLine(this: MapContainer, edit: EditPoint, pos: LatLng){
@@ -131,16 +135,15 @@ export function updatePosition(this: MapContainer, edit: EditPoint, pos: LatLng)
     line.points.splice(edit.index, 0, pos)
   }
   line.version += 1
-  this.setState(Object.assign({}, this.state, {
-    edit_line: null,
-  }))
-  this.props.onUpdate()
+  Action.setTarget(null)
+  Action.updateLines()
 }
 
 export function showOption(this: MapContainer, edit: EditPoint, marker: google.maps.Marker){
   if (edit.type === "exist") {
     var terminal = (edit.index === 0 || edit.index === edit.line.points.length - 1)
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       edit_option: {
         point: edit,
         line: edit.line,
@@ -148,25 +151,27 @@ export function showOption(this: MapContainer, edit: EditPoint, marker: google.m
         type: (terminal ? "terminal" : "middle"),
       },
       edit_points: [edit],
-    }))
+    })
   } else if (edit.type === "extend") {
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       edit_option: {
         point: edit,
         line: edit.line,
         marker: marker,
         type: "extend",
       },
-    }))
+    })
   } else if (edit.type === "extend-target"){
-    this.setState(Object.assign({}, this.state, {
+    this.setState({
+      ...this.state,
       edit_option: {
         point: edit,
         line: edit.line,
         marker: marker,
         type: "extend-target",
       },
-    }))
+    })
   }
 }
 
@@ -177,21 +182,25 @@ export function cutPolyline(this: MapContainer, option: EditOption){
   const points = line.points
   const point = option.point
   if (point.index === 0 || point.index === points.length - 1) return
-  var new_line = this.props.onAdd()
-  var lines = this.props.polylines.map(l => {
-    if (l.key === line.key) {
-      line.name = `${name}-1`
-      line.version += 1
-      line.points = points.filter((p, i) => i <= point.index)
-      new_line.name = `${name}-2`
-      new_line.points = points.filter((p, i) => i >= point.index)
-      return [line, new_line]
-    } else {
-      return l
-    }
-  }).flat()
+  
   console.log("cut", name, `index:${point.index}`)
-  this.props.onUpdate(lines)
+  Action.setTarget(null)
+  Action.updateLines((polylines, factory) => {
+    var new_line = factory()
+    var lines = polylines.map(l => {
+      if (l.key === line.key) {
+        line.name = `${name}-1`
+        line.version += 1
+        line.points = points.filter((p, i) => i <= point.index)
+        new_line.name = `${name}-2`
+        new_line.points = points.filter((p, i) => i >= point.index)
+        return [line, new_line]
+      } else {
+        return l
+      }
+    }).flat()
+    return lines
+  })
   this.closeEditOption()
 }
 
@@ -202,6 +211,6 @@ export function deletePoint(this: MapContainer, option: EditOption){
   console.log("delete", line.name, `index:${point.index}`)
   line.points = line.points.filter((p, i) => i !== point.index)
   line.version += 1
-  this.props.onUpdate()
+  Action.updateLines()
   this.closeEditOption()
 }

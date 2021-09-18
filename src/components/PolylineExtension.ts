@@ -1,5 +1,6 @@
 import { MapContainer } from "../components/Map"
 import { PolylineProps, EditPoint, LatLng, ExtendPoints } from "../script/types"
+import * as Action from "../script/Actions"
 
 
 export function start(this: MapContainer, edit: EditPoint) {
@@ -21,6 +22,7 @@ export function start(this: MapContainer, edit: EditPoint) {
       }
     ],
   })
+  Action.setTarget(edit.line)
 }
 
 export function update(this: MapContainer, event: any) {
@@ -89,7 +91,7 @@ function addPoints(this: MapContainer, points: Array<LatLng>, lines?: Array<Poly
       }
     })
     line.version += 1
-    this.props.onUpdate(lines)
+    Action.updateLines(lines)
 
     this.setState({
       ...this.state,
