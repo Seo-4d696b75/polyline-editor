@@ -15,7 +15,7 @@ import { PropsEvent } from "../script/Event";
 
 interface MapState {
 	edit_points: Array<EditPoint>
-	edit_line: PolylineProps | null
+	show_new_line: boolean
 	edit_option: EditOption | null
 	edit_extend: ExtendPoints | null
 }
@@ -34,7 +34,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 
 	state: MapState = {
 		edit_points: [],
-		edit_line: null,
+		show_new_line: false,
 		edit_option: null,
 		edit_extend: null,
 	}
@@ -271,13 +271,13 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 							)
 						})}
 						{this.renderOptionInfo()}
-						{this.state.edit_line ? (
+						{this.props.target && this.state.show_new_line ? (
 
 							<Polyline
 								ref={this.new_line}
-								key={getKey(this.state.edit_line, "edit_new")}
+								key={getKey(this.props.target, "edit_new")}
 								path={[]}
-								strokeColor={this.state.edit_line.color}
+								strokeColor={this.props.target.color}
 								strokeWeight={4}
 								strokeOpacity={1.0}
 								fillOpacity={0.0}

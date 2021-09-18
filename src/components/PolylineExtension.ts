@@ -6,7 +6,7 @@ import * as Action from "../script/Actions"
 export function start(this: MapContainer, edit: EditPoint) {
   this.setState({
     ...this.state,
-    edit_line: edit.line,
+    show_new_line: true,
     edit_extend: {
       line: edit.line,
       index: edit.index,
@@ -95,7 +95,7 @@ function addPoints(this: MapContainer, points: Array<LatLng>, lines?: Array<Poly
 
     this.setState({
       ...this.state,
-      edit_line: null,
+      show_new_line: false,
       edit_extend: null,
       edit_option: null,
       edit_points: [],

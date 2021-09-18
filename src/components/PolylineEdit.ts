@@ -85,7 +85,7 @@ export function updateMarkers(this: MapContainer, line: PolylineProps, event: an
   this.setState({
     ...this.state,
     edit_points: points,
-    edit_line: line,
+    show_new_line: true
   })
 }
 
