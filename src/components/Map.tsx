@@ -192,7 +192,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 								))
 							}).flat()}
 
-						{polylines.filter(line => line.visible && line.stroke)
+						{ polylines.filter(line => line.visible && line.stroke && line.key === this.props.target?.key)
 							.map((line, i) => (
 								<Polyline
 									key={getKey(line, "edit")}
@@ -416,5 +416,3 @@ export default GoogleApiWrapper({
 	language: "ja",
 	LoadingContainer: LoadingContainer,
 })(MapContainer);
-
-console.log("api-key", process.env.REACT_APP_API_KEY)
