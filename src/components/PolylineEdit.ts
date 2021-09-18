@@ -135,7 +135,6 @@ export function updatePosition(this: MapContainer, edit: EditPoint, pos: LatLng)
     line.points.splice(edit.index, 0, pos)
   }
   line.version += 1
-  Action.setTarget(null)
   Action.updateLines()
 }
 
@@ -184,10 +183,9 @@ export function cutPolyline(this: MapContainer, option: EditOption){
   if (point.index === 0 || point.index === points.length - 1) return
   
   console.log("cut", name, `index:${point.index}`)
-  Action.setTarget(null)
   Action.updateLines((polylines, factory) => {
     var new_line = factory()
-    var lines = polylines.map(l => {
+    return polylines.map(l => {
       if (l.key === line.key) {
         line.name = `${name}-1`
         line.version += 1
@@ -199,7 +197,6 @@ export function cutPolyline(this: MapContainer, option: EditOption){
         return l
       }
     }).flat()
-    return lines
   })
   this.closeEditOption()
 }

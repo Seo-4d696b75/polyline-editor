@@ -1,6 +1,6 @@
 import React from 'react';
 import './Editor.css';
-import Map from "./Map"
+import Map, { MapProps } from "./Map"
 import img_setting from "../img/ic_settings.png";
 import img_delete from "../img/ic_trash.png";
 import img_close from "../img/ic_delete.png";
@@ -8,17 +8,16 @@ import img_export from "../img/ic_upload.png";
 import { CSSTransition } from "react-transition-group";
 import * as Action from "../script/Actions";
 import { Button } from "react-bootstrap";
-import {PolylineProps, Polyline} from "../script/types"
-import {MapProps} from "./Map"
+import { PolylineProps } from "../script/types"
 import { GlobalState } from "../script/Reducer";
 import { connect } from 'react-redux';
 
-function mapState2Props(state: GlobalState): MapProps{
-	return {
-		polylines: state.lines,
-		target: state.target,
-		focus: state.focus_map,
-	}
+function mapState2Props(state: GlobalState): MapProps {
+  return {
+    polylines: state.lines,
+    target: state.target,
+    focus: state.focus_map,
+  }
 }
 
 class Editor extends React.Component<MapProps, {}> {
@@ -26,7 +25,7 @@ class Editor extends React.Component<MapProps, {}> {
   onPolylineVisibleChanged(line: PolylineProps, event?: any) {
     var value = event.currentTarget.checked
     line.visible = value
-    if ( !value && this.props.target && this.props.target.key === line.key ){
+    if (!value && this.props.target && this.props.target.key === line.key) {
       Action.setTarget(null)
     }
     Action.updateLines()
@@ -38,7 +37,7 @@ class Editor extends React.Component<MapProps, {}> {
   }
 
 
-  setEditLine(line: PolylineProps){
+  setEditLine(line: PolylineProps) {
     line.visible = true
     Action.setTarget(line)
     Action.updateLines()
@@ -62,12 +61,12 @@ class Editor extends React.Component<MapProps, {}> {
   render() {
     return (
       <div>
-      <div className="editor-container">
-        <div className="editor-relative">
-          <p className="panel-title">ポリライン一覧</p>
-          {this.props.polylines.length === 0 ? (
-            <div className="import-hint">表示するデータがありません</div>
-          ) : (
+        <div className="editor-container">
+          <div className="editor-relative">
+            <p className="panel-title">ポリライン一覧</p>
+            {this.props.polylines.length === 0 ? (
+              <div className="import-hint">表示するデータがありません</div>
+            ) : (
 
               <div className="polyline-scroll">
                 <table>
@@ -85,8 +84,8 @@ class Editor extends React.Component<MapProps, {}> {
                           />
                         </td>
                         <td>
-                          <div className="polyline-color" 
-                          style={{ backgroundColor: polyline.color }}></div>
+                          <div className="polyline-color"
+                            style={{ backgroundColor: polyline.color }}></div>
                         </td>
                         <td>
                           <div className="polyline-name"
@@ -135,7 +134,7 @@ class Editor extends React.Component<MapProps, {}> {
                                         value="stroke"
                                         checked={polyline.stroke}
                                         onChange={this.setPolylineStyle.bind(this, polyline, true)} />
-                                        線でつなぐ
+                                      線でつなぐ
                                     </label>
                                     <div className="style-preview" style={{
                                       backgroundColor: polyline.color,
@@ -150,7 +149,7 @@ class Editor extends React.Component<MapProps, {}> {
                                         value="marker"
                                         checked={!polyline.stroke}
                                         onChange={this.setPolylineStyle.bind(this, polyline, false)} />
-                                        マーカーのみ
+                                      マーカーのみ
                                     </label>
                                     <div className="style-preview">
                                       <img
@@ -174,18 +173,18 @@ class Editor extends React.Component<MapProps, {}> {
               </div>
 
             )}
-          <div className="editor-footer">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => { Action.requestImport() }}>追加</Button>
+            <div className="editor-footer">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => { Action.requestImport() }}>追加</Button>
+            </div>
           </div>
         </div>
-      </div>
-      <Map
-        polylines={this.props.polylines}
-        target={this.props.target}
-        focus={this.props.focus}/>
+        <Map
+          polylines={this.props.polylines}
+          target={this.props.target}
+          focus={this.props.focus} />
       </div>
     )
   }

@@ -1,4 +1,4 @@
-import React, { FormEvent } from 'react';
+import React from 'react';
 import './Dialog.css';
 import { Modal, Button, Form, Col, DropdownButton, Dropdown, FormControl, FormLabel, Row, FormGroup } from 'react-bootstrap';
 import * as Action from '../script/Actions'
@@ -8,7 +8,7 @@ import { connect } from "react-redux"
 
 type FormControlElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-function mapState2Props(state: GlobalState): DialogProps{
+function mapState2Props(state: GlobalState): DialogProps {
   return {
     dialog: state.modal
   }
@@ -71,7 +71,7 @@ class Dialog extends React.Component<DialogProps, DialogState> {
         navigator.clipboard.writeText(this.state.text)
       }
     }
-    if (!this.props.dialog ) return null
+    if (!this.props.dialog) return null
     switch (this.props.dialog.type) {
       case ModalType.Import: {
         return (
@@ -160,14 +160,14 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                   variant="primary"
                   onClick={this.submit.bind(this)}>
                   Export
-                  </Button>
+                </Button>
               </Col>
               <Col xs={2}>
                 <Button
                   variant="outline-primary"
                   onClick={copy}>
                   Copy
-                  </Button>
+                </Button>
               </Col>
             </Row>
             <FormGroup controlId="data">
@@ -203,7 +203,7 @@ class Dialog extends React.Component<DialogProps, DialogState> {
         checked = true
       }
       if (checked) {
-        switch (this.props?.dialog?.type ) {
+        switch (this.props?.dialog?.type) {
           case ModalType.Import: {
             this.importPolyline(format, this.state.text)
             break
@@ -291,7 +291,7 @@ class Dialog extends React.Component<DialogProps, DialogState> {
               variant="secondary"
               onClick={this.closeModal.bind(this)}>
               Close
-              </Button>
+            </Button>
             {this.props.dialog?.type === ModalType.Import ? (
               <Button
                 variant="primary"
