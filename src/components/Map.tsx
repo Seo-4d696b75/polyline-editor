@@ -1,7 +1,6 @@
 import { GoogleApiWrapper, Map, Marker, Polyline, InfoWindow, GoogleAPI, IMapProps } from "google-maps-react";
 import React from "react";
 import "./Map.css";
-import * as Extension from "./PolylineExtension"
 import * as Edit from "./PolylineEdit"
 import * as Utils from "../script/utils"
 import img_delete from "../img/ic_trash.png";
@@ -10,14 +9,13 @@ import img_edit from "../img/ic_edit.png";
 import img_done from "../img/ic_check.png"
 import img_merge from "../img/ic_append.png"
 import img_copy from "../img/ic_copy.png"
-import { EditOption, EditPoint, PolylineProps, Bounds, ExtendPoints } from "../script/types"
+import { EditOption, PolylineProps, Bounds, EditState, PointSelector } from "../script/types"
 import { PropsEvent } from "../script/Event";
 
 interface MapState {
-	edit_points: Array<EditPoint>
-	show_new_line: boolean
+	edit_state: EditState | null
+	selectors: Array<PointSelector>
 	edit_option: EditOption | null
-	edit_extend: ExtendPoints | null
 }
 
 export interface MapProps {
@@ -30,13 +28,23 @@ interface WrappedMapProps extends MapProps {
 	google: GoogleAPI
 }
 
+function getLatLng(event: any) {
+	return {
+		lat: event.latLng.lat(),
+		lng: event.latLng.lng()
+	}
+}
+
+function isShowEditingLine(state: MapState): boolean {
+	return state.edit_state !== null
+}
+
 export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 
 	state: MapState = {
-		edit_points: [],
-		show_new_line: false,
+		edit_state: null,
+		selectors: [],
 		edit_option: null,
-		edit_extend: null,
 	}
 
 
@@ -65,35 +73,22 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		}
 	}
 
-	onMapRightClicked(props?: IMapProps, map?: google.maps.Map, event?: any) {
+	onMapRightClicked(props?: IMapProps, map?: google.maps.Map, event?: any) { }
 
-	}
+	onMapZoomChanged(props?: IMapProps, map?: google.maps.Map, event?: any) { }
 
-	onMapZoomChanged(props?: IMapProps, map?: google.maps.Map, event?: any) {
-		console.log("zoom", map?.getZoom());
-	}
+	onBoundsChanged(props?: IMapProps, map?: google.maps.Map, event?: any) { }
 
-	onBoundsChanged(props?: IMapProps, map?: google.maps.Map, event?: any) {
-	}
+	onMapIdle(props?: IMapProps, map?: google.maps.Map, event?: any) { }
 
-	onMapIdle(props?: IMapProps, map?: google.maps.Map, event?: any) {
-	}
-
-
-	onMapDragStart(props?: IMapProps, map?: google.maps.Map, event?: any) {
-	}
+	onMapDragStart(props?: IMapProps, map?: google.maps.Map, event?: any) { }
 
 	onMouseMove(event: any) {
-		Extension.update.call(this, event)
+		Edit.updateExtendingPoint.call(this, getLatLng(event))
 	}
 
 	onMapClicked(props?: IMapProps, map?: google.maps.Map, event?: any) {
-
-		const pos = {
-			lat: event.latLng.lat(),
-			lng: event.latLng.lng()
-		}
-		Extension.addPoint.call(this, pos)
+		Edit.addPointExtending.call(this, getLatLng(event))
 	}
 
 	focusAt(bounds: Bounds) {
@@ -107,41 +102,30 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		}
 	}
 
-	onMarkerDragStart(edit: EditPoint, event: any) {
-		console.log("drag-start")
-		Edit.updateNewLine.call(this, edit, edit.position)
-	}
-
-	onMarkerDrag(edit: EditPoint, event: any) {
-		const pos = {
-			lat: event.latLng.lat(),
-			lng: event.latLng.lng()
-		};
-		edit.position = pos
-		Edit.updateNewLine.call(this, edit, pos);
-	}
-
-	onMarkerDragEnd(edit: EditPoint, event?: any) {
-		console.log("drag-end")
-		const pos = {
-			lat: event.latLng.lat(),
-			lng: event.latLng.lng()
-		};
-		Edit.updatePosition.call(this, edit, pos)
-	}
-
-	showEditOption(edit: EditPoint, props?: any, marker?: google.maps.Marker, event?: any) {
-		if ( marker ){
-			Edit.showOption.call(this, edit, marker)
+	closeEditOption() {
+		if (this.state.edit_state === EditState.Extending) {
+			this.setState({
+				...this.state,
+				edit_option: null
+			})
+		} else {
+			this.setState({
+				...this.state,
+				edit_option: null,
+				selectors: [],
+				edit_state: null,
+			})
 		}
 	}
 
-	closeEditOption() {
-
-		this.setState(Object.assign({}, this.state, {
-			edit_option: null,
-		}))
-		Edit.closeMarkers.call(this)
+	disableSelectors() {
+		if (this.state.edit_state === EditState.EdgeFocused) {
+			this.setState({
+				...this.state,
+				selectors: [],
+				edit_state: null,
+			})
+		}
 	}
 
 	render() {
@@ -190,18 +174,13 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 										position={point}
 										draggable={true}
 										ref={(current: any) => {
-											if ( current ){
-												if ( current.marker instanceof google.maps.Marker ){
+											if (current) {
+												if (current.marker instanceof google.maps.Marker) {
 													current.marker.addListener("dragend", (e: any) => {
-														this.onMarkerDragEnd({
-															position: point,
-															type: "exist",
-															index: i,
-															line: line
-														}, e)
+														Edit.updatePosition.call(this, line, i, getLatLng(e), "exist")
 													})
 												} else {
-													console.error("fail to find google.maps.Marker in " , current)
+													console.error("fail to find google.maps.Marker in ", current)
 												}
 											}
 										}}
@@ -209,7 +188,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 								))
 							}).flat()}
 
-						{ polylines.filter(line => line.visible && line.stroke && line.key === this.props.target?.key)
+						{polylines.filter(line => line.visible && line.stroke && line.key === this.props.target?.key)
 							.map((line, i) => (
 								<Polyline
 									key={getKey(line, "edit")}
@@ -220,14 +199,15 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 									fillOpacity={0.0}
 									clickable={true}
 									zIndex={this.props.target?.key === line.key ? polylines.length : i}
-									onMouseout={Edit.closeMarkers.bind(this)}
+									onMouseout={this.disableSelectors.bind(this)}
 									ref={(current: any) => {
 										// onMousemove event not working on Polyline component!!
-										if ( current ){
-											if ( current.polyline instanceof google.maps.Polyline ){
+										if (current) {
+											if (current.polyline instanceof google.maps.Polyline) {
 												current.polyline.addListener("mousemove", (event: any) => {
-													Extension.update.call(this, event)
-													Edit.updateMarkers.call(this, line, event)
+													var pos = getLatLng(event)
+													Edit.updateExtendingPoint.call(this, pos)
+													Edit.updateSelectors.call(this, line, pos)
 												})
 											} else {
 												console.error("cannot find google.maps.polyline in", current)
@@ -237,15 +217,16 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 									}}
 								/>
 							))}
-						{this.state.edit_points.map(edit => {
-							const line = edit.line
+						{this.state.selectors.map(selector => {
+							const line = selector.line
+							const draggable = !!(selector.onDrag || selector.onDragStart || selector.onDragEnd)
 							const refCallback = (c: any | null) => {
 								// "drag" event not working in Mark component
 								if (c) {
 									if (c.marker instanceof google.maps.Marker) {
-										c.marker.addListener("dragstart", this.onMarkerDragStart.bind(this, edit))
-										c.marker.addListener("drag", this.onMarkerDrag.bind(this, edit))
-										c.marker.addListener("dragend", this.onMarkerDragEnd.bind(this, edit))
+										c.marker.addListener("dragstart", (e: any) => { selector.onDragStart?.call(this, getLatLng(e), selector) })
+										c.marker.addListener("drag", (e: any) => { selector.onDrag?.call(this, getLatLng(e), selector) })
+										c.marker.addListener("dragend", (e: any) => { selector.onDragEnd?.call(this, getLatLng(e), selector) })
 									} else {
 										console.error("can not find google.maps.Marker by property name: marker in", c)
 									}
@@ -256,22 +237,24 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 								scale: 10,
 								strokeColor: line.color,
 								strokeWeight: 1,
-								fillColor: (edit.type === "new" ? "#FFFFFF" : line.color),
+								fillColor: (selector.fillColor ? selector.fillColor : line.color),
 								fillOpacity: 1.0
 							}
 							return (
 								<Marker
 									ref={refCallback}
-									key={getKey(line, `edit_${edit.type}_${edit.index}`)}
-									position={edit.position}
+									key={getKey(line, `selector_${selector.key}`)}
+									position={selector.position}
 									icon={icon}
-									draggable={true}
-									onClick={this.showEditOption.bind(this, edit)}>
+									draggable={draggable}
+									onClick={(prop?: any, marker?: google.maps.Marker) => {
+										if (marker) selector.onClick?.call(this, marker, selector)
+									}}>
 								</Marker>
 							)
 						})}
 						{this.renderOptionInfo()}
-						{this.props.target && this.state.show_new_line ? (
+						{this.props.target && isShowEditingLine(this.state) ? (
 
 							<Polyline
 								ref={this.new_line}
@@ -291,12 +274,10 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		)
 	}
 
-	renderOptionInfo(): any{
-		//if ( !this.state.edit_option ) return null
+	renderOptionInfo(): any {
 		const option = this.state.edit_option
 		const addCallback = () => {
-			if ( !option ) return
-			option as EditOption
+			if (!option) return
 			// content of InfoWindow is passed as string value,
 			// onClick callback object not registered via props
 			var cut = document.getElementById("action-button-edit-cut")
@@ -309,23 +290,23 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 				remove.onclick = Edit.deletePoint.bind(this, option)
 			}
 			if (extend) {
-				extend.onclick = Extension.start.bind(this, option.point)
+				extend.onclick = Edit.startExtending.bind(this, option.point)
 			}
 			var comp = document.getElementById("action-button-edit-extend-complete")
 			if (comp) {
-				comp.onclick = Extension.complete.bind(this)
+				comp.onclick = Edit.completeExtending.bind(this)
 			}
 			var back = document.getElementById("action-button-edit-extend-back")
 			if (back) {
-				back.onclick = Extension.undoPoint.bind(this)
+				back.onclick = Edit.deletePointExtending.bind(this)
 			}
 			var copy = document.getElementById("action-button-edit-extend-copy")
 			if (copy) {
-				copy.onclick = Extension.addPoint.bind(this, option.point.position)
+				// TODO
 			}
 			var merge = document.getElementById("action-button-edit-extend-merge")
 			if (merge) {
-				merge.onclick = Extension.merge.bind(this, option.point)
+				// TODO
 			}
 		}
 		var content = (
@@ -333,7 +314,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		)
 		if (option) {
 			switch (option.type) {
-				case "middle":
+				case "exist-middle":
 					content = (
 						<div className="edit-option">
 							<img
@@ -349,7 +330,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 						</div>
 					)
 					break
-				case "terminal":
+				case "exist-terminal":
 					content = (
 						<div className="edit-option">
 							<img
@@ -382,6 +363,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 					)
 					break
 				case "extend-target":
+					// TODO
 					content = (
 						<div className="edit-option">
 							<img
@@ -403,7 +385,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		}
 		return (
 			<InfoWindow
-				visible={ !!option && option.line.visible}
+				visible={!!option && option.line.visible}
 				marker={option?.marker ? option?.marker : undefined}
 				onOpen={addCallback}
 				onClose={this.closeEditOption.bind(this)}>
