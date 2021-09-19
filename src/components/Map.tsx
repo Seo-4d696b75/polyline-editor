@@ -9,12 +9,11 @@ import img_edit from "../img/ic_edit.png";
 import img_done from "../img/ic_check.png"
 import img_merge from "../img/ic_append.png"
 import img_copy from "../img/ic_copy.png"
-import { EditOption, PolylineProps, Bounds, EditState, PointSelector } from "../script/types"
+import { EditOption, PolylineProps, Bounds, EditState, PointSelector, EditType } from "../script/types"
 import { PropsEvent } from "../script/Event";
 
 interface MapState {
 	edit_state: EditState | null
-	selectors: Array<PointSelector>
 	edit_option: EditOption | null
 }
 
@@ -39,11 +38,21 @@ function isShowEditingLine(state: MapState): boolean {
 	return state.edit_state !== null
 }
 
+function getSelectors(state: EditState | null): Array<PointSelector> {
+	switch(state?.type){
+		case EditType.EdgeFocused:
+			return [state.value.start, state.value.middle, state.value.end]
+		case EditType.Extending:
+			return [state.value.point]
+		default:
+			return []
+	}
+}
+
 export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 
 	state: MapState = {
 		edit_state: null,
-		selectors: [],
 		edit_option: null,
 	}
 
@@ -93,7 +102,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 	}
 
 	closeEditOption() {
-		if (this.state.edit_state === EditState.Extending) {
+		if (this.state.edit_state?.type === EditType.Extending) {
 			this.setState({
 				...this.state,
 				edit_option: null
@@ -102,17 +111,15 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 			this.setState({
 				...this.state,
 				edit_option: null,
-				selectors: [],
 				edit_state: null,
 			})
 		}
 	}
 
 	disableSelectors() {
-		if (this.state.edit_state === EditState.EdgeFocused) {
+		if (this.state.edit_state?.type === EditType.EdgeFocused) {
 			this.setState({
 				...this.state,
-				selectors: [],
 				edit_state: null,
 			})
 		}
@@ -202,7 +209,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 									}}
 								/>
 							))}
-						{this.state.selectors.map(selector => {
+						{getSelectors(this.state.edit_state).map(selector => {
 							const line = selector.line
 							const draggable = !!(selector.onDrag || selector.onDragStart || selector.onDragEnd)
 							const refCallback = (c: any | null) => {

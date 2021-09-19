@@ -1,5 +1,5 @@
 import * as Utils from "../script/utils"
-import { PolylineProps, LatLng, EditOption, PointSelector, EditState } from "../script/types"
+import { PolylineProps, LatLng, EditOption, PointSelector, EditState, EditType } from "../script/types"
 import { MapContainer } from "../components/Map"
 import * as Action from "../script/Actions"
 
@@ -10,12 +10,12 @@ export function updateSelectors(this: MapContainer, line: PolylineProps, pos: La
   // index of closest point
   var i1 = Utils.findClosedIndex(pos, line.points)
   var p1 = line.points[i1]
-  switch (this.state.edit_state) {
-    case EditState.Extending:
+  switch (this.state.edit_state?.type) {
+    case EditType.Extending:
 
       // TODO
       break
-    case EditState.EdgeFocused:
+    case EditType.EdgeFocused:
     case null:
       var i2: number = 0
       if (i1 === 0) {
@@ -37,9 +37,9 @@ export function updateSelectors(this: MapContainer, line: PolylineProps, pos: La
       }
       // index of next point
       var p2 = line.points[i2]
-      if (this.state.edit_state === EditState.EdgeFocused) {
-        var current = this.state.selectors
-        if (current.length === 3 && current[0].index === i1 && current[2].index === i2) {
+      if (this.state.edit_state?.type === EditType.EdgeFocused) {
+        var value = this.state.edit_state.value
+        if (value.start.index === i1 && value.end.index === i2) {
           // no change
           break
         }
@@ -54,47 +54,52 @@ export function updateSelectors(this: MapContainer, line: PolylineProps, pos: La
           showEditOption.call(this, self, "exist", marker)
         }
         var i = Math.max(i1, i2)
-        points = [
-          {
-            position: p1,
-            index: i1,
-            key: i1,
-            line: line,
-            onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i1, p, "exist") },
-            onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i1, p, "exist") },
-            onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i1, p, "exist") },
-            onClick: click
+        var start = {
+          position: p1,
+          index: i1,
+          key: i1,
+          line: line,
+          onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i1, p, "exist") },
+          onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i1, p, "exist") },
+          onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i1, p, "exist") },
+          onClick: click
+        }
+        var middle = {
+          position: {
+            lat: (p1.lat + p2.lat) / 2,
+            lng: (p1.lng + p2.lng) / 2,
           },
-          {
-            position: {
-              lat: (p1.lat + p2.lat) / 2,
-              lng: (p1.lng + p2.lng) / 2,
-            },
-            index: i,
-            key: (i1 + i2) / 2,
-            line: line,
-            fillColor: "#FFFFFF",
-            onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i, p, "new") },
-            onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i, p, "new") },
-            onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i, p, "new") },
-          },
-          {
-            position: p2,
-            index: i2,
-            key: i2,
-            line: line,
-            onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i2, p, "exist") },
-            onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i2, p, "exist") },
-            onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i2, p, "exist") },
-            onClick: click
-          },
-        ]
+          index: i,
+          key: (i1 + i2) / 2,
+          line: line,
+          fillColor: "#FFFFFF",
+          onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i, p, "new") },
+          onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i, p, "new") },
+          onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i, p, "new") },
+        }
+        var end = {
+          position: p2,
+          index: i2,
+          key: i2,
+          line: line,
+          onDragStart: (p: LatLng) => { updateEditingLine.call(this, line, i2, p, "exist") },
+          onDrag: (p: LatLng) => { updateEditingLine.call(this, line, i2, p, "exist") },
+          onDragEnd: (p: LatLng) => { updatePosition.call(this, line, i2, p, "exist") },
+          onClick: click
+        }
+
+        this.setState({
+          ...this.state,
+          edit_state: {
+            type: EditType.EdgeFocused,
+            value: {
+              start: start,
+              middle: middle,
+              end: end
+            }
+          }
+        })
       }
-      this.setState({
-        ...this.state,
-        selectors: points,
-        edit_state: EditState.EdgeFocused
-      })
       break
     default:
   }
@@ -153,7 +158,6 @@ function showEditOption(this: MapContainer, selector: PointSelector, type: "exis
         marker: marker,
         type: (terminal ? "exist-terminal" : "exist-middle"),
       },
-      selectors: [selector],
     })
   } else if (type === "extend") {
     this.setState({
@@ -164,7 +168,6 @@ function showEditOption(this: MapContainer, selector: PointSelector, type: "exis
         marker: marker,
         type: "extend",
       },
-      selectors: [selector],
     })
   } else if (type === "extend-target") {
     // TODO
@@ -212,21 +215,25 @@ export function deletePoint(this: MapContainer, option: EditOption) {
 export function startExtending(this: MapContainer, selector: PointSelector) {
   this.setState({
     ...this.state,
-    edit_state: EditState.Extending,
+    edit_state: {
+      type: EditType.Extending,
+      value: {
+        point: {
+          position: selector.position,
+          line: selector.line,
+          index: selector.index,
+          key: selector.key,
+          onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
+        }
+      }
+    },
     edit_option: null,
-    selectors: [{
-      position: selector.position,
-      line: selector.line,
-      index: selector.index,
-      key: selector.key,
-      onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
-    }]
   })
 }
 
 export function updateExtendingPoint(this: MapContainer, pos: LatLng) {
-  if (this.state.edit_state === EditState.Extending && !this.state.edit_option) {
-    var points = [this.state.selectors[0].position, pos]
+  if (this.state.edit_state?.type === EditType.Extending && !this.state.edit_option) {
+    var points = [this.state.edit_state.value.point.position, pos]
     points.push(pos)
     const component = this.new_line.current
     if (component) {
@@ -241,8 +248,8 @@ export function updateExtendingPoint(this: MapContainer, pos: LatLng) {
 }
 
 export function addPointExtending(this: MapContainer, pos: LatLng) {
-  if (this.state.edit_state === EditState.Extending && !this.state.edit_option) {
-    const selector = this.state.selectors[0]
+  if (this.state.edit_state?.type === EditType.Extending && !this.state.edit_option) {
+    const selector = this.state.edit_state.value.point
     const index = selector.index
     const line = selector.line
     var next_index = 0
@@ -258,15 +265,19 @@ export function addPointExtending(this: MapContainer, pos: LatLng) {
     Action.updateLines()
     this.setState({
       ...this.state,
-      edit_state: EditState.Extending,
+      edit_state: {
+        type: EditType.Extending,
+        value: {
+          point: {
+            position: pos,
+            index: next_index,
+            line: line,
+            key: next_index,
+            onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
+          }
+        }
+      },
       edit_option: null,
-      selectors: [{
-        position: pos,
-        index: next_index,
-        line: line,
-        key: next_index,
-        onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
-      }]
     })
   }
 }
@@ -275,14 +286,13 @@ export function completeExtending(this: MapContainer) {
   this.setState({
     ...this.state,
     edit_state: null,
-    selectors: [],
   })
   this.closeEditOption()
 }
 
 export function deletePointExtending(this: MapContainer) {
-  if (this.state.edit_state === EditState.Extending) {
-    const selector = this.state.selectors[0]
+  if (this.state.edit_state?.type === EditType.Extending) {
+    const selector = this.state.edit_state.value.point
     const line = selector.line
     if (line.points.length <= 2) return
     const index = selector.index
@@ -299,22 +309,26 @@ export function deletePointExtending(this: MapContainer) {
     Action.updateLines()
     this.setState({
       ...this.state,
-      edit_state: EditState.Extending,
+      edit_state: {
+        type: EditType.Extending,
+        value: {
+          point: {
+            position: line.points[next_index],
+            index: next_index,
+            line: line,
+            key: next_index,
+            onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
+          }
+        }
+      },
       edit_option: null,
-      selectors: [{
-        position: line.points[next_index],
-        index: next_index,
-        line: line,
-        key: next_index,
-        onClick: (marker, self) => { showEditOption.call(this, self, "extend", marker) }
-      }]
     })
   }
 }
 
 
 export function mergeLine(this: MapContainer, self: PointSelector, target: PointSelector) {
-  if (this.state.edit_state === EditState.Extending) {
+  if (this.state.edit_state?.type === EditType.Extending) {
 
     const points = self.line.points
     if (points.length > 1) {

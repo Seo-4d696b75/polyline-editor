@@ -42,23 +42,28 @@ export interface PointSelector {
   onDragEnd?: (pos: LatLng, self: PointSelector) => void
 }
 
-export enum EditState {
+export enum EditType {
   EdgeFocused,
   Extending
 }
 
-export interface EditPoint {
-  position: LatLng
-  index: number
-  type: "extend-target" | "extend" | "exist" | "new" | "extend-from"
-  line: PolylineProps
+interface EditStateBase<T,V> {
+  type: T
+  value: V
 }
 
-export interface ExtendPoints {
-  index: number
-  line: PolylineProps
-  points: Array<LatLng>
-}
+type EdgeFocusedState = EditStateBase<EditType.EdgeFocused,{
+  start: PointSelector,
+  middle: PointSelector,
+  end: PointSelector
+}>
+type ExtendingState = EditStateBase<EditType.Extending,{
+  point: PointSelector
+}>
+
+export type EditState = 
+  EdgeFocusedState |
+  ExtendingState
 
 export interface EditOption {
   point: PointSelector
