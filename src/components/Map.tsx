@@ -73,16 +73,6 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		}
 	}
 
-	onMapRightClicked(props?: IMapProps, map?: google.maps.Map, event?: any) { }
-
-	onMapZoomChanged(props?: IMapProps, map?: google.maps.Map, event?: any) { }
-
-	onBoundsChanged(props?: IMapProps, map?: google.maps.Map, event?: any) { }
-
-	onMapIdle(props?: IMapProps, map?: google.maps.Map, event?: any) { }
-
-	onMapDragStart(props?: IMapProps, map?: google.maps.Map, event?: any) { }
-
 	onMouseMove(event: any) {
 		Edit.updateExtendingPoint.call(this, getLatLng(event))
 	}
@@ -140,11 +130,6 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 						initialCenter={{ lat: 35.681236, lng: 139.767125 }}
 						onReady={this.onMapReady.bind(this)}
 						onClick={this.onMapClicked.bind(this)}
-						onBoundsChanged={this.onBoundsChanged.bind(this)}
-						onZoomChanged={this.onMapZoomChanged.bind(this)}
-						onDragstart={this.onMapDragStart.bind(this)}
-						onRightclick={this.onMapRightClicked.bind(this)}
-						onIdle={this.onMapIdle.bind(this)}
 						fullscreenControl={false}
 						streetViewControl={false}
 						zoomControl={true}
