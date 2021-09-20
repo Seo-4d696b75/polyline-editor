@@ -76,28 +76,30 @@ class Dialog extends React.Component<DialogProps, DialogState> {
       case ModalType.Import: {
         return (
           <Form>
-            <FormLabel>座標のフォーマット</FormLabel>
-            <Row>
-              <Col xs={8}>
-                <FormControl
-                  as="textarea"
-                  rows={1}
-                  value={this.state.format}
-                  onChange={setFormat} />
-              </Col>
-              <Col xs={2}>
-                <DropdownButton
-                  id="import-format-template"
-                  variant="outline-primary"
-                  title="テンプレート"
-                  onSelect={selectFormat}>
-                  <Dropdown.Item eventKey="$<lat>,$<lng>">CSV (lat,lng)</Dropdown.Item>
-                  <Dropdown.Item eventKey="$<lng>,$<lat>">CSV (lng,lat)</Dropdown.Item>
-                  <Dropdown.Item eventKey={'"lat":$<lat>,.?"lng":$<lng>'}>JSON (lat/lng)</Dropdown.Item>
-                  <Dropdown.Item eventKey={'"lng":$<lng>,.?"lat":$<lat>'}>JSON (lng/lat)</Dropdown.Item>
-                </DropdownButton>
-              </Col>
-            </Row>
+            <FormGroup>
+              <FormLabel>座標のフォーマット</FormLabel>
+              <Row>
+                <Col xs={8}>
+                  <FormControl
+                    as="textarea"
+                    rows={1}
+                    value={this.state.format}
+                    onChange={setFormat} />
+                </Col>
+                <Col xs={2}>
+                  <DropdownButton
+                    id="import-format-template"
+                    variant="outline-primary"
+                    title="テンプレート"
+                    onSelect={selectFormat}>
+                    <Dropdown.Item eventKey="$<lat>,$<lng>">CSV (lat,lng)</Dropdown.Item>
+                    <Dropdown.Item eventKey="$<lng>,$<lat>">CSV (lng,lat)</Dropdown.Item>
+                    <Dropdown.Item eventKey={'"lat":$<lat>,.?"lng":$<lng>'}>JSON (lat/lng)</Dropdown.Item>
+                    <Dropdown.Item eventKey={'"lng":$<lng>,.?"lat":$<lat>'}>JSON (lng/lat)</Dropdown.Item>
+                  </DropdownButton>
+                </Col>
+              </Row>
+            </FormGroup>
             <div className="invalid">{this.state.invalid_format ? "緯度$<lat>・経度$<lng>を表すフォーマットを指定してください" : null}</div>
             <FormGroup controlId="data">
               <FormLabel>座標データ</FormLabel>
@@ -107,7 +109,8 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                 size="sm"
                 onChange={setText}
                 ref={(c: HTMLTextAreaElement | null) => {
-                  if (c) {
+                  if (c && !this.focus_ref) {
+                    this.focus_ref = c
                     setTimeout(() => {
                       c.focus()
                     }, 100);

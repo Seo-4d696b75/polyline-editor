@@ -16,7 +16,7 @@ export function updateSelectors(this: MapContainer, line: PolylineProps, pos: La
       // TODO
       break
     case EditType.EdgeFocused:
-    case null:
+    case undefined:
       var i2: number = 0
       if (i1 === 0) {
         i2 = 1
