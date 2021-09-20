@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": "./",
-    "paths": {
-      "google-maps-react": ["src/types/google-maps-react"]
-    },
     "typeRoots": [
-      "src/types",
       "node_modules/@types"
     ],
     "target": "es5",
@@ -34,6 +30,7 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "google-maps-react.d.ts"
   ]
 }
