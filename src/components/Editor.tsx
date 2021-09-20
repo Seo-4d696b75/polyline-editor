@@ -55,6 +55,7 @@ class Editor extends React.Component<MapProps, {}> {
 
   setPolylineStyle(line: PolylineProps, stroke: boolean) {
     line.stroke = stroke
+    line.setting = false
     Action.updateLines()
   }
 
