@@ -177,8 +177,7 @@ class Editor extends React.Component<MapProps, {}> {
             <div className="editor-footer">
               <Button
                 variant="primary"
-                size="lg"
-                onClick={() => { Action.requestImport() }}>追加</Button>
+                onClick={() => { Action.requestImport() }}>ポリラインの追加</Button>
             </div>
           </div>
         </div>
