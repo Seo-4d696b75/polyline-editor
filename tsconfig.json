@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": "./",
+    "paths": {
+      "google-maps-react": ["src/types/google-maps-react"]
+    },
     "typeRoots": [
-      "types",
+      "src/types",
       "node_modules/@types"
     ],
     "target": "es5",

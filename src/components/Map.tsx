@@ -58,7 +58,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 
 
 	map_ref = React.createRef<HTMLDivElement>();
-	new_line = React.createRef<Polyline>();
+	new_line = React.createRef<any>();
 	map: google.maps.Map | null = null
 
 	componentDidUpdate() {
@@ -378,7 +378,7 @@ export class MapContainer extends React.Component<WrappedMapProps, MapState> {
 		return (
 			<InfoWindow
 				visible={!!option && option.line.visible}
-				marker={option?.marker ? option?.marker : undefined}
+				marker={option?.marker}
 				onOpen={addCallback}
 				onClose={this.closeEditOption.bind(this)}>
 				{content}

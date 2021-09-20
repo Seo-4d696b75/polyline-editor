@@ -123,7 +123,7 @@ function updateEditingLine(this: MapContainer, line: PolylineProps, index: numbe
   }))
   solution: update path points of polyline directly without setState
   */
-  const component = this.new_line.current as any
+  const component = this.new_line.current
   if (component) {
     var path = points.map(p => new this.props.google.maps.LatLng(p.lat, p.lng))
     if (component.polyline instanceof google.maps.Polyline) {
