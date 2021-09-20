@@ -194,7 +194,9 @@ class Dialog extends React.Component<DialogProps, DialogState> {
   closeModal() {
     this.setState({
       ...this.state,
-      text: ""
+      text: "",
+      invalid_format: false,
+      invalid_text: false,
     })
     Action.closeDialog()
   }
@@ -229,22 +231,23 @@ class Dialog extends React.Component<DialogProps, DialogState> {
     var points: Polyline = []
     text.split(/\n/).forEach(line => {
       var regex = new RegExp(format, 'g')
-      var cnt = 0
       while (true) {
         var match = regex.exec(line)
-        if (!match) break
+        if (!match) {
+          if ( points.length > 0 ) {
+            lines.push(points)
+            points = []
+          }
+          break
+        }
         if (match.groups) {
           var lat = parseFloat(match.groups.lat)
           var lng = parseFloat(match.groups.lng)
           if (lat > -90 && lat < 90 && lng >= -180 && lng <= 180) {
             points.push({ lat: lat, lng: lng })
-            cnt += 1
+            break
           }
         }
-      }
-      if (cnt === 0 && points.length > 0) {
-        lines.push(points)
-        points = []
       }
     })
     if (points.length > 0) {
