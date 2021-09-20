@@ -22,9 +22,11 @@ interface DialogState {
   format: string
   text: string
   invalid_format: boolean
+  valid_format: boolean
   invalid_text: boolean
   digit: number
   points: Polyline | null
+  validated: boolean
 }
 
 
@@ -34,9 +36,11 @@ class Dialog extends React.Component<DialogProps, DialogState> {
     format: "$<lat>,$<lng>",
     text: "",
     invalid_format: false,
+    valid_format: false,
     invalid_text: false,
     digit: 5,
     points: null,
+    validated: false,
   }
 
   focus_ref: HTMLTextAreaElement | null = null
@@ -75,16 +79,23 @@ class Dialog extends React.Component<DialogProps, DialogState> {
     switch (this.props.dialog.type) {
       case ModalType.Import: {
         return (
-          <Form>
+          <Form validated={this.state.validated}>
             <FormGroup>
               <FormLabel>座標のフォーマット</FormLabel>
               <Row>
                 <Col xs={8}>
-                  <FormControl
-                    as="textarea"
-                    rows={1}
-                    value={this.state.format}
-                    onChange={setFormat} />
+                  <FormGroup>
+                    <FormControl
+                      as="textarea"
+                      rows={1}
+                      value={this.state.format}
+                      onChange={setFormat}
+                      isInvalid={this.state.invalid_format}
+                      isValid={this.state.valid_format} />
+                    <FormControl.Feedback type="invalid">
+                      <div className="invalid-format-message">{"緯度\"$<lat>\",経度\"$<lng>\"を含む必要があります"}</div>
+                    </FormControl.Feedback>
+                  </FormGroup>
                 </Col>
                 <Col xs={2}>
                   <DropdownButton
@@ -100,14 +111,16 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                 </Col>
               </Row>
             </FormGroup>
-            <div className="invalid">{this.state.invalid_format ? "緯度$<lat>・経度$<lng>を表すフォーマットを指定してください" : null}</div>
             <FormGroup controlId="data">
               <FormLabel>座標データ</FormLabel>
               <FormControl
                 as="textarea"
                 rows={12}
                 size="sm"
+                required={true}
+                placeholder="１行ごとにひとつ座標を読み出します"
                 onChange={setText}
+                isInvalid={this.state.invalid_text}
                 ref={(c: HTMLTextAreaElement | null) => {
                   if (c && !this.focus_ref) {
                     this.focus_ref = c
@@ -116,7 +129,9 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                     }, 100);
                   }
                 }} />
-              {this.state.invalid_text ? <div className="invalid">有効なデータが見つかりません</div> : null}
+              <FormControl.Feedback type="invalid">
+                <div className="invalid">有効なデータが見つかりません</div>
+              </FormControl.Feedback>
             </FormGroup>
 
           </Form>
@@ -128,11 +143,18 @@ class Dialog extends React.Component<DialogProps, DialogState> {
             <FormLabel>座標のフォーマット</FormLabel>
             <Row>
               <Col xs={8}>
-                <FormControl
-                  as="textarea"
-                  rows={1}
-                  value={this.state.format}
-                  onChange={setFormat} />
+                <FormGroup>
+                  <FormControl
+                    as="textarea"
+                    rows={1}
+                    value={this.state.format}
+                    onChange={setFormat}
+                    isInvalid={this.state.invalid_format}
+                    isValid={this.state.valid_format} />
+                  <FormControl.Feedback type="invalid">
+                    <div className="invalid-format-message">{"緯度\"$<lat>\",経度\"$<lng>\"を含む必要があります"}</div>
+                  </FormControl.Feedback>
+                </FormGroup>
               </Col>
               <Col xs={2}>
                 <DropdownButton
@@ -147,7 +169,6 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                 </DropdownButton>
               </Col>
             </Row>
-            <div className="invalid">{this.state.invalid_format ? "緯度$<lat>・経度$<lng>を表すフォーマットを指定してください" : null}</div>
             <Row>
               <Col xs={6}>
                 <FormLabel>座標値の小数点以下桁数 : <strong>{this.state.digit}</strong></FormLabel>
@@ -179,7 +200,8 @@ class Dialog extends React.Component<DialogProps, DialogState> {
                 rows={12}
                 size="sm"
                 readOnly
-                value={this.state.text} />
+                value={this.state.text}
+                placeholder="１行ごとにひとつ座標を書き出します" />
             </FormGroup>
 
           </Form>
@@ -197,8 +219,10 @@ class Dialog extends React.Component<DialogProps, DialogState> {
       text: "",
       invalid_format: false,
       invalid_text: false,
+      valid_format: false,
     })
     Action.closeDialog()
+    this.focus_ref = null
   }
 
   submit() {
@@ -221,6 +245,7 @@ class Dialog extends React.Component<DialogProps, DialogState> {
     this.setState({
       ...this.state,
       invalid_format: true,
+      invalid_text: false,
     })
   }
 
@@ -234,7 +259,7 @@ class Dialog extends React.Component<DialogProps, DialogState> {
       while (true) {
         var match = regex.exec(line)
         if (!match) {
-          if ( points.length > 0 ) {
+          if (points.length > 0) {
             lines.push(points)
             points = []
           }
@@ -260,6 +285,8 @@ class Dialog extends React.Component<DialogProps, DialogState> {
       this.setState({
         ...this.state,
         invalid_text: true,
+        invalid_format: false,
+        valid_format: true,
       })
     }
   }
@@ -276,6 +303,8 @@ class Dialog extends React.Component<DialogProps, DialogState> {
       this.setState({
         ...this.state,
         text: text,
+        invalid_format: false,
+        valid_format: true
       })
     }
   }
