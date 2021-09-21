@@ -34,7 +34,7 @@ export function updateLines(arg?: PolylineUpdate | Array<PolylineProps>) {
 		// prepare factory
 		var hue = state.line_hue
 		var cnt = state.line_cnt
-		var lines: Array<PolylineProps> = state.lines
+		var lines: Array<PolylineProps>
 		if (Array.isArray(arg)) {
 			lines = arg
 		} else if (arg) {

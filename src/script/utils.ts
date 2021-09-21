@@ -69,14 +69,14 @@ export function getZoomProp(bounds: Bounds, width: number, height: number, min_z
   };
 }
 
-export function findClosedIndex(point: LatLng, points: Polyline): number{
+export function findClosedIndex(pos: LatLng, points: Polyline): number{
   const measure = (a: LatLng, b: LatLng) => {
     return Math.pow(a.lat - b.lat, 2) + Math.pow(a.lng - b.lng, 2)
   }
   var index = -1
   var min = 100000000.0
   points.forEach( (p, i) => {
-    var d = measure(point, p)
+    var d = measure(pos, p)
     if ( !min || d < min ){
       min = d
       index = i

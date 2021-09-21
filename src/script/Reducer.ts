@@ -68,9 +68,10 @@ const init_state: GlobalState = {
 }
 
 const reducer: Reducer<GlobalState, GlobalAction> = (
-  state: GlobalState = init_state,
+  current_state: GlobalState | undefined,
   action: GlobalAction
 ): GlobalState => {
+  var state = current_state || init_state
   switch (action.type) {
     case ActionType.Import: {
       return {

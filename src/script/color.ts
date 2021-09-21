@@ -7,7 +7,6 @@ export function parseHSV(h: number, s: number, v: number): string {
     const i = Math.floor(h)
     const f = h - i
     switch (i) {
-      default:
       case 0:
         g *= 1 - s * (1 - f);
         b *= 1 - s;
@@ -32,10 +31,11 @@ export function parseHSV(h: number, s: number, v: number): string {
         g *= 1 - s;
         b *= 1 - s * f;
         break;
+      default:
     }
   }
-  return "#" + [r, g, b].map(v => {
-    var str = Math.round(255 * v).toString(16)
+  return "#" + [r, g, b].map(c => {
+    var str = Math.round(255 * c).toString(16)
     while (str.length < 2) {
       str = "0" + str
     }
